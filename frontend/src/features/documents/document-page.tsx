@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import AppShell from "../../components/app-shell";
+import { AlertBox, EmptyState, LoadingBlock, PageHeader, SharpButton, StatusBadge } from "../../components/ui";
 import api from "../../lib/api";
 
 interface Document {
@@ -10,32 +13,35 @@ interface Document {
   created_at: string;
 }
 
-const statusColors: Record<string, string> = {
-  pending: "gray",
-  processing: "orange",
-  ready: "green",
-  failed: "red",
-};
-
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [role, setRole] = useState<string | null>(null);
+  const reduceMotion = useReducedMotion();
 
   const loadDocuments = async () => {
-    const res = await api.get("/documents/");
-    setDocuments(res.data);
+    try {
+      const res = await api.get("/documents/");
+      setDocuments(res.data);
+    } catch {
+      setError("Failed to load documents.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    api.get("/auth/me/").then((res) => setRole(res.data.role));
+    api
+      .get("/auth/me/")
+      .then((res) => setRole(res.data.role))
+      .catch(() => setRole(null));
     loadDocuments();
   }, []);
 
-  const handleUpload = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -44,7 +50,6 @@ export default function DocumentsPage() {
       return;
     }
 
-    // infer file_type from the extension
     const extension = file.name.split(".").pop()?.toLowerCase();
     if (extension !== "pdf" && extension !== "txt") {
       setError("Only PDF and TXT files are supported right now.");
@@ -61,9 +66,12 @@ export default function DocumentsPage() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setFile(null);
-      loadDocuments();
-    } catch (err: any) {
-      const data = err.response?.data;
+      (e.currentTarget as HTMLFormElement).reset();
+      await loadDocuments();
+    } catch (err: unknown) {
+      const data = (err as { response?: { data?: unknown } }).response?.data as
+        | Record<string, string[]>
+        | undefined;
       const firstError = data ? (Object.values(data)[0] as string[])?.[0] : null;
       setError(firstError || "Upload failed. Please try again.");
     } finally {
@@ -75,47 +83,87 @@ export default function DocumentsPage() {
     if (!confirm("Delete this document? This cannot be undone.")) return;
     try {
       await api.delete(`/documents/${id}/`);
-      loadDocuments();
+      await loadDocuments();
     } catch {
       alert("Failed to delete. You may not have permission.");
     }
   };
 
+  const canManage = role === "company_admin";
+
   return (
-    <div style={{ maxWidth: 500, margin: "40px auto" }}>
-      <h2>Documents</h2>
+    <AppShell>
+      <motion.div
+        initial={{ opacity: 0, y: reduceMotion ? 0 : 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="space-y-5"
+      >
+        <PageHeader
+          badge="Documents"
+          title="Company documents"
+          sub={canManage ? "Upload PDFs/TXTs. They chunk + embed automatically." : "Browse your company's knowledge base."}
+        />
 
-      {role === "company_admin" && (
-        <form onSubmit={handleUpload} style={{ marginBottom: 24 }}>
-          <input
-            type="file"
-            accept=".pdf,.txt"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            style={{ display: "block", marginBottom: 8 }}
-          />
-          <button type="submit" disabled={uploading}>
-            {uploading ? "Uploading..." : "Upload"}
-          </button>
-          {error && <p style={{ color: "red" }}>{error}</p>}
-        </form>
-      )}
+        {canManage && (
+          <form onSubmit={handleUpload} className="border-2 border-neutral-950 bg-white p-4 shadow-[5px_5px_0_#0a0a0b]">
+            <p className="text-[11.5px] font-extrabold tracking-[0.08em] uppercase">Upload — PDF / TXT only</p>
+            <div className="mt-2.5 flex flex-col gap-2.5 sm:flex-row">
+              <input
+                type="file"
+                accept=".pdf,.txt"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="flex-1 border-2 border-neutral-950 bg-neutral-50 px-3 py-2 text-[13px] font-medium file:mr-3 file:border-2 file:border-neutral-950 file:bg-[#FFD02F] file:px-2.5 file:py-1 file:text-[11px] file:font-extrabold file:tracking-[0.06em] file:uppercase"
+              />
+              <SharpButton type="submit" disabled={uploading}>
+                {uploading ? "Uploading…" : "Upload"}
+              </SharpButton>
+            </div>
+          </form>
+        )}
 
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {documents.map((doc) => (
-          <li key={doc.id} style={{ marginBottom: 12, borderBottom: "1px solid #ccc", paddingBottom: 8 }}>
-            <strong>{doc.file.split("/").pop()}</strong> ({doc.file_type})
-            <br />
-            Status: <span style={{ color: statusColors[doc.status], fontWeight: "bold" }}>{doc.status}</span>
-            {doc.error_message && <p style={{ color: "red", fontSize: 12 }}>{doc.error_message}</p>}
+        {error && <AlertBox>{error}</AlertBox>}
+        {loading && <LoadingBlock label="Loading documents…" />}
 
-            {role === "company_admin" && (
-              <button onClick={() => handleDelete(doc.id)} style={{ marginTop: 4 }}>
-                Delete
-              </button>
-            )}  
-          </li>
-        ))}
-      </ul>
-    </div>
+        {!loading && documents.length === 0 && (
+          <EmptyState title="No documents yet" sub={canManage ? "Upload your first PDF or TXT above." : "Ask your admin to upload documents."} />
+        )}
+
+        <ul className="grid gap-3">
+          {documents.map((doc) => (
+            <li key={doc.id} className="border-2 border-neutral-950 bg-white p-4 shadow-[5px_5px_0_#0a0a0b]">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[14px] font-extrabold tracking-[-0.01em]">
+                  {doc.file.split("/").pop()}{" "}
+                  <span className="ml-1 border-2 border-neutral-950 bg-neutral-100 px-1.5 py-0.5 align-middle text-[10.5px] tracking-[0.06em] uppercase">
+                    {doc.file_type}
+                  </span>
+                </p>
+                {(canManage || doc.status !== "ready") && <StatusBadge status={doc.status} />}
+              </div>
+              {doc.error_message && (
+                <p className="mt-2 border-2 border-neutral-950 bg-red-50 px-2.5 py-1.5 text-[12px] font-bold text-red-700">
+                  {doc.error_message}
+                </p>
+              )}
+              <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                <span className="text-[11.5px] font-medium text-neutral-400">
+                  {new Date(doc.created_at).toLocaleString()}
+                </span>
+                {canManage && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(doc.id)}
+                    className="ml-auto border-2 border-neutral-950 bg-white px-2.5 py-1 text-[11px] font-extrabold tracking-[0.06em] uppercase text-red-600 shadow-[3px_3px_0_#0a0a0b] transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-red-600 hover:text-white"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+    </AppShell>
   );
 }

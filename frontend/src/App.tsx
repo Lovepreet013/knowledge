@@ -8,12 +8,13 @@ import CompaniesPage from "./features/companies/companies-page";
 import DocumentsPage from "./features/documents/document-page";
 import ChatPage from "./features/chat/chat-page";
 import CompanyUsersPage from "./features/companies/company-user-page";
+import HomePage from "./components/home-page";
 
 
 function App() {
   return (
     <Routes>
-      <Route path='/' element={<LoginPage/>}/>
+      <Route path='/' element={<HomePage/>}/>
       <Route path='/login' element={<LoginPage/>}/>
       <Route path="/register" element={<RegisterPage />} />
       <Route 

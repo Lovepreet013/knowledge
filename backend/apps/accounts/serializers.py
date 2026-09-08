@@ -28,13 +28,19 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    company_name = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ["id", "username", "email", "role", "company", "is_active"]
+        fields = ["id", "username", "email", "role", "company", "company_name", "is_active"]
         read_only_fields = [
             "id",
             "email",
             "username",
             "role",
             "company",
+            "company_name",
         ]  # only is_active is editable
+
+    def get_company_name(self, obj):
+        return obj.company.name if obj.company else None
