@@ -39,6 +39,16 @@ export default function CompaniesPage() {
     }
   };
 
+  const handleDeleteCompany = async (id: number) => {
+    if (!confirm("Delete this company? This deletes ALL its users, documents, and chats. This cannot be undone.")) return;
+    try {
+      await api.delete(`/companies/${id}/`);
+      loadCompanies();
+    } catch {
+      alert("Failed to delete company.");
+    }
+  };
+
   return (
     <div style={{ maxWidth: 500, margin: "40px auto" }}>
       <h2>Companies</h2>
@@ -62,11 +72,15 @@ export default function CompaniesPage() {
 
       <ul style={{ listStyle: "none", padding: 0 }}>
         {companies.map((c) => (
-          <li key={c.id} style={{ marginBottom: 12, borderBottom: "1px solid #ccc", paddingBottom: 8 }}>
-            <strong>{c.name}</strong> ({c.slug})
-            <br />
-            Invite code: <code>{c.invite_code}</code>
-          </li>
+        <li key={c.id} style={{ marginBottom: 12, borderBottom: "1px solid #ccc", paddingBottom: 8 }}>
+          <strong>{c.name}</strong> ({c.slug})
+          <br />
+          Invite code: <code>{c.invite_code}</code>
+          <br />
+          <button onClick={() => handleDeleteCompany(c.id)} style={{ marginTop: 4, color: "red" }}>
+            Delete Company
+          </button>
+        </li>
         ))}
       </ul>
     </div>

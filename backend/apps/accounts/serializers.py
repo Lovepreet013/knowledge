@@ -30,4 +30,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "role", "company"]
+        fields = ["id", "username", "email", "role", "company", "is_active"]
+        read_only_fields = [
+            "id",
+            "email",
+            "username",
+            "role",
+            "company",
+        ]  # only is_active is editable

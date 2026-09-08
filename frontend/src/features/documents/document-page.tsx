@@ -23,12 +23,15 @@ export default function DocumentsPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
+  const [role, setRole] = useState<string | null>(null);
+
   const loadDocuments = async () => {
     const res = await api.get("/documents/");
     setDocuments(res.data);
   };
 
   useEffect(() => {
+    api.get("/auth/me/").then((res) => setRole(res.data.role));
     loadDocuments();
   }, []);
 
@@ -68,37 +71,47 @@ export default function DocumentsPage() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm("Delete this document? This cannot be undone.")) return;
+    try {
+      await api.delete(`/documents/${id}/`);
+      loadDocuments();
+    } catch {
+      alert("Failed to delete. You may not have permission.");
+    }
+  };
+
   return (
     <div style={{ maxWidth: 500, margin: "40px auto" }}>
       <h2>Documents</h2>
 
-      <form onSubmit={handleUpload} style={{ marginBottom: 24 }}>
-        <input
-          type="file"
-          accept=".pdf,.txt"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          style={{ display: "block", marginBottom: 8 }}
-        />
-        <button type="submit" disabled={uploading}>
-          {uploading ? "Uploading..." : "Upload"}
-        </button>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-      </form>
+      {role === "company_admin" && (
+        <form onSubmit={handleUpload} style={{ marginBottom: 24 }}>
+          <input
+            type="file"
+            accept=".pdf,.txt"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            style={{ display: "block", marginBottom: 8 }}
+          />
+          <button type="submit" disabled={uploading}>
+            {uploading ? "Uploading..." : "Upload"}
+          </button>
+          {error && <p style={{ color: "red" }}>{error}</p>}
+        </form>
+      )}
 
       <ul style={{ listStyle: "none", padding: 0 }}>
         {documents.map((doc) => (
-          <li
-            key={doc.id}
-            style={{ marginBottom: 12, borderBottom: "1px solid #ccc", paddingBottom: 8 }}
-          >
+          <li key={doc.id} style={{ marginBottom: 12, borderBottom: "1px solid #ccc", paddingBottom: 8 }}>
             <strong>{doc.file.split("/").pop()}</strong> ({doc.file_type})
             <br />
-            Status:{" "}
-            <span style={{ color: statusColors[doc.status], fontWeight: "bold" }}>
-              {doc.status}
-            </span>
-            {doc.error_message && (
-              <p style={{ color: "red", fontSize: 12 }}>{doc.error_message}</p>
+            Status: <span style={{ color: statusColors[doc.status], fontWeight: "bold" }}>{doc.status}</span>
+            {doc.error_message && <p style={{ color: "red", fontSize: 12 }}>{doc.error_message}</p>}
+
+            {role === "company_admin" && (
+              <button onClick={() => handleDelete(doc.id)} style={{ marginTop: 4 }}>
+                Delete
+              </button>
             )}
           </li>
         ))}

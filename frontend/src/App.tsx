@@ -7,6 +7,8 @@ import PromotePage from "./features/companies/promote-page";
 import CompaniesPage from "./features/companies/companies-page";
 import DocumentsPage from "./features/documents/document-page";
 import ChatPage from "./features/chat/chat-page";
+import CompanyUsersPage from "./features/companies/company-user-page";
+
 
 function App() {
   return (
@@ -18,22 +20,26 @@ function App() {
           path='/dashboard' 
           element={<ProtectedRoute><DashboardPage/></ProtectedRoute>}
         />
-      <Route
-          path="/companies"
-          element={<ProtectedRoute><CompaniesPage /></ProtectedRoute>}
+        <Route path="/documents" element={
+          <ProtectedRoute requireCompany><DocumentsPage /></ProtectedRoute>
+          } 
+        />
+        <Route path="/chat" element={
+          <ProtectedRoute requireCompany><ChatPage /></ProtectedRoute>
+          } 
+        />
+        <Route path="/companies" element={
+          <ProtectedRoute allowedRoles={["superadmin"]}><CompaniesPage /></ProtectedRoute>
+          } 
+        />
+        <Route path="/promote" element={
+          <ProtectedRoute allowedRoles={["superadmin"]}><PromotePage /></ProtectedRoute>
+          } 
         />
         <Route
-          path="/promote"
-          element={<ProtectedRoute><PromotePage /></ProtectedRoute>}
-        />
-        <Route
-          path="/documents"
-          element={<ProtectedRoute><DocumentsPage /></ProtectedRoute>}
-        />
-        <Route
-          path="/chat"
-          element={<ProtectedRoute><ChatPage /></ProtectedRoute>}
-        />
+          path="/company-users"
+          element={<ProtectedRoute allowedRoles={["company_admin"]}><CompanyUsersPage /></ProtectedRoute>}
+        />  
     </Routes>
   )
 }

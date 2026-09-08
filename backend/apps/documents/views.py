@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 from .models import Document, DocumentChunk
 from .chunking import chunk_text
 from .embeddings import get_embeddings_batch
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 
 # Create your views here.
@@ -16,7 +17,7 @@ class DocumentListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Document.objects.filter(
             company=self.request.user.company  # type: ignore
-        )  # pyright: ignore[reportAttributeAccessIssue]
+        )
 
     def get_serializer_class(self):
         if self.request.method == "POST":
@@ -26,6 +27,9 @@ class DocumentListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         if self.request.user.company is None:  # type: ignore
             raise ValidationError("You must belong to a company to upload documents.")
+
+        if self.request.user.role != "company_admin":  # type: ignore
+            raise PermissionDenied("Only company admins can upload documents.")
 
         document = serializer.save(
             company=self.request.user.company,  # type: ignore
@@ -59,3 +63,22 @@ class DocumentListCreateView(generics.ListCreateAPIView):
             document.status = "failed"
             document.error_message = str(e)
             document.save()
+
+
+class DocumentDetailView(generics.DestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = DocumentSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == "superadmin":  # type: ignore
+            return Document.objects.all()  # superadmin reaches across all companies
+        return Document.objects.filter(company=user.company)  # type: ignore  # everyone else stays tenant-scoped
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        if user.role not in ("company_admin", "superadmin"):  # type: ignore
+            raise PermissionDenied(
+                "You do not have permission to delete this document."
+            )
+        instance.delete()
