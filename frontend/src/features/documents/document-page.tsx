@@ -35,7 +35,7 @@ export default function DocumentsPage() {
     loadDocuments();
   }, []);
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleUpload = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
@@ -112,7 +112,7 @@ export default function DocumentsPage() {
               <button onClick={() => handleDelete(doc.id)} style={{ marginTop: 4 }}>
                 Delete
               </button>
-            )}
+            )}  
           </li>
         ))}
       </ul>
