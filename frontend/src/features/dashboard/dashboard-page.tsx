@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Link } from "react-router";
 import AppShell from "../../components/app-shell";
 import { AlertBox, EmptyState, LoadingBlock, PageHeader, StatusBadge } from "../../components/ui";
@@ -17,7 +17,6 @@ interface Me {
 export default function DashboardPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState("");
-  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     api

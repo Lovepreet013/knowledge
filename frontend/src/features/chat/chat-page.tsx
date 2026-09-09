@@ -223,7 +223,7 @@ export default function ChatPage() {
                     placeholder="Ask a question about your company documents…"
                     disabled={sending}
                     aria-label="Ask a question"
-                    className="flex-1 border-2 border-neutral-950 bg-white px-3 py-2 text-[13px] font-medium tracking-[-0.01em] placeholder:text-neutral-400 focus:shadow-[4px_4px_0_#0a0a0b] focus:outline-none disabled:opacity-60"
+                    className="flex-1 border-2 border-neutral-950 bg-white px-3 py-2 text-[13px] font-medium tracking-[-0.01em] placeholder:text-neutral-400 focus:shadow-none focus:outline-none disabled:opacity-60"
                   />
                   <SharpButton type="submit" disabled={sending || !input.trim()}>
                     Send

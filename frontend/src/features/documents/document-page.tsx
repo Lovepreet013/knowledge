@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import AppShell from "../../components/app-shell";
 import { AlertBox, EmptyState, LoadingBlock, PageHeader, SharpButton, StatusBadge } from "../../components/ui";
 import api from "../../lib/api";
@@ -20,7 +20,6 @@ export default function DocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [role, setRole] = useState<string | null>(null);
-  const reduceMotion = useReducedMotion();
 
   const loadDocuments = async () => {
     try {
