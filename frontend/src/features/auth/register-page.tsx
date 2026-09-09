@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { motion, useReducedMotion } from "framer-motion";
 import { Box } from "lucide-react";
 import api from "../../lib/api";
 
@@ -18,7 +17,6 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const reduceMotion = useReducedMotion();
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,10 +55,10 @@ export default function RegisterPage() {
     <div className="flex min-h-screen min-h-svh flex-col bg-white font-sans text-black antialiased">
       <div className="sticky top-0 z-20 bg-white shadow-[0px_1px_0px_0px_rgba(0,0,0,0.16)]">
         <header className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-5 lg:px-8">
-          <Link to="/" className="flex items-center gap-3" aria-label="Company Knowledge AI home">
+          <Link to="/" className="flex items-center gap-3" aria-label="Knowledge AI home">
             <Box className="h-7 w-7 text-black" aria-hidden="true" />
             <span className="font-display text-base leading-[23.2px] font-medium tracking-[-0.02em] text-black">
-              Company Knowledge AI
+              Knowledge AI
             </span>
           </Link>
           <Link
@@ -73,27 +71,20 @@ export default function RegisterPage() {
       </div>
 
       <main className="flex flex-1 flex-col">
-        <section aria-label="Register" className="flex flex-1 flex-col justify-center">
-          <motion.div
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="mx-auto my-auto w-full max-w-lg px-4 py-10 sm:px-5"
-          >
-            <div className="rounded-xl border border-[#E0E0E0] bg-white">
-              <div className="border-b border-[#E0E0E0] px-6 py-6">
-                <p className="font-display inline-block rounded-full bg-black px-3 py-1 text-sm leading-[18.2px] font-medium text-white">
-                  Invite only
-                </p>
-                <h1 className="font-display mt-4 text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black">
-                  Register
-                </h1>
-                <p className="mt-3 text-lg leading-[25.2px] font-normal text-black">
-                  Join your company workspace with an invite code.
-                </p>
-              </div>
+        <section aria-label="Register" className="grid flex-1 lg:grid-cols-2">
+          <div className="my-auto flex w-full flex-col justify-center px-4 py-10 sm:px-5 lg:px-0 lg:py-14 lg:pr-12 lg:pl-[max(2rem,calc((100vw-75rem)/2+2rem))]">
+            <div className="w-full max-w-md">
+            <p className="font-display inline-block rounded-full bg-black px-3 py-1 text-sm leading-[18.2px] font-medium text-white">
+              Invite only
+            </p>
+            <h1 className="font-display mt-4 text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black">
+              Register
+            </h1>
+            <p className="mt-3 text-lg leading-[25.2px] font-normal text-black">
+              Join your company workspace with an invite code.
+            </p>
 
-              <form onSubmit={handleSubmit} className="space-y-4 px-6 py-6">
+            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
                 <div>
                   <label htmlFor="register-email" className={labelCls}>
                     Email
@@ -187,7 +178,7 @@ export default function RegisterPage() {
                 </button>
               </form>
 
-              <p className="rounded-b-xl border-t border-[#E0E0E0] bg-[#F5F5F5] px-6 py-4 text-center text-base leading-[23.2px] font-normal text-black">
+              <p className="mt-8 text-center text-base leading-[23.2px] font-normal text-black">
                 Already have an account?{" "}
                 <Link
                   to="/login"
@@ -197,7 +188,23 @@ export default function RegisterPage() {
                 </Link>
               </p>
             </div>
-          </motion.div>
+          </div>
+          <aside aria-label="Product preview" className="relative hidden overflow-hidden lg:block">
+            <img
+              src="/login.webp"
+              alt="Misty lakeside mountains in the style of a Japanese woodblock print"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-white via-white/10 to-transparent" />
+            <div className="absolute top-1/2 right-8 left-8 -translate-y-1/2 -rotate-2 rounded-xl border border-[#E0E0E0] bg-white/85 p-6 shadow-[0_4px_12px_rgba(0,0,0,0.08)] backdrop-blur transition-transform duration-300 hover:rotate-0">
+              <p className="font-display mt-4 text-lg leading-[25.2px] font-medium text-black">
+                “One invite code onboarded our whole team into the right tenant.”
+              </p>
+              <p className="mt-2 text-sm leading-5 font-normal text-[#666666]">
+                Daniel · Operations lead, Globex
+              </p>
+            </div>
+          </aside>
         </section>
       </main>
     </div>

@@ -86,16 +86,14 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white font-sans text-black antialiased">
-      {/* ── Nav: 64px, hairline divider, compact CTAs ── */}
       <div className="sticky top-0 z-20 bg-white shadow-[0px_1px_0px_0px_rgba(0,0,0,0.16)]">
         <motion.header
-          {...rise(0)}
           className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-5 lg:px-8"
         >
-          <Link to="/" className="flex items-center gap-3" aria-label="Company Knowledge AI home">
+          <Link to="/" className="flex items-center gap-3" aria-label="Knowledge AI home">
             <Box className="h-7 w-7 text-black" aria-hidden="true" />
             <span className="font-display text-base leading-[23.2px] font-medium tracking-[-0.02em] text-black">
-              Company Knowledge AI
+              Knowledge AI
             </span>
           </Link>
 
@@ -135,7 +133,7 @@ export default function HomePage() {
 
       {/* ── Hero: announcement pill + grotesk display + photo bg + motif ── */}
       <main className="flex flex-1 flex-col">
-        <section aria-label="Company Knowledge AI hero" className="hero-bg relative overflow-hidden">
+        <section aria-label="Knowledge AI hero" className="hero-bg relative overflow-hidden">
           <div className="relative mx-auto w-full max-w-[1200px] px-4 pt-12 pb-8 text-center sm:px-5 lg:px-8">
             <motion.div {...rise(0.05)} className="flex justify-center">
               <Pill>
@@ -195,18 +193,15 @@ export default function HomePage() {
                   “What is our refund policy?”
                 </p>
               </div>
-              <div className="font-display absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-[#E0E0E0] bg-black px-4 py-2 text-xs leading-4 font-medium whitespace-nowrap text-white shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
-                5 sources cited
-              </div>
             </motion.div>
 
             <motion.div {...rise(0.46)} className="mt-12 border-t border-[#E0E0E0] pt-8">
-              <p className="font-display text-sm leading-[18.2px] font-normal text-[#666666]">
-                Tenant-isolated teams run on Company Knowledge AI
+              <p className="font-display text-md leading-[18.2px] font-normal text-[#666666]">
+                Tenant-isolated teams run on Knowledge AI
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[#999999]">
                 {["ACME", "Globex", "Initech", "Umbrella", "Hooli"].map((logo) => (
-                  <span key={logo} className="font-display text-lg font-medium tracking-[-0.02em]">
+                  <span key={logo} className="font-display text-xl font-medium tracking-[-0.02em]">
                     {logo}
                   </span>
                 ))}
@@ -547,7 +542,7 @@ export default function HomePage() {
           <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <Box className="h-7 w-7 text-white" aria-hidden="true" />
-              <span className="font-display text-base font-medium text-white">Company Knowledge AI</span>
+              <span className="font-display text-base font-medium text-white">Knowledge AI</span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
@@ -567,7 +562,7 @@ export default function HomePage() {
             </div>
           </div>
           <p className="mt-8 font-display text-xs leading-4 font-normal text-white/40">
-            © 2026 Company Knowledge AI · Tenant-isolated answers with cited sources
+            © 2026 Knowledge AI · Tenant-isolated answers with cited sources
           </p>
         </div>
       </footer>

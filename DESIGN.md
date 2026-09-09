@@ -1,5 +1,5 @@
 ---
-name: Figma
+name: Knowledge AI
 colors:
   primary: "#000000"
   secondary: "#7C3AED"

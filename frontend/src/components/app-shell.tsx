@@ -39,10 +39,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen min-h-svh flex-col bg-white font-[Inter,ui-sans-serif,system-ui] text-neutral-950 antialiased">
       <div className="shrink-0 px-4 pt-4 sm:px-6">
         <header className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 border-2 border-neutral-950 bg-white py-2 pr-2 pl-4 shadow-[6px_6px_0_#0a0a0b]">
-          <Link to="/dashboard" className="flex items-center gap-2" aria-label="Company Knowledge AI dashboard">
+          <Link to="/dashboard" className="flex items-center gap-2" aria-label="Knowledge AI dashboard">
             <Box className="h-7 w-7 text-neutral-950" aria-hidden="true" />
             <span className="hidden text-[15px] font-extrabold tracking-[-0.02em] uppercase sm:block">
-              Company Knowledge AI
+              Knowledge AI
             </span>
           </Link>
           <div className="flex items-center gap-2">
