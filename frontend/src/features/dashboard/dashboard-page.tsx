@@ -44,9 +44,6 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <motion.div
-        initial={{ opacity: 0, y: reduceMotion ? 0 : 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
         className="space-y-5"
       >
         <PageHeader

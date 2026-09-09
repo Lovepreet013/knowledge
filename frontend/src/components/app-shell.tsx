@@ -1,15 +1,8 @@
-import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import AppIcon from "./app-icon";
-import api from "../lib/api";
-
-interface Me {
-  username: string;
-  role: string;
-  company: number | null;
-  company_name?: string | null;
-}
+import { useMe } from "./me-provider";
+import type { Me } from "./me-provider";
 
 function navItems(me: Me | null) {
   const items: { to: string; label: string }[] = [{ to: "/dashboard", label: "Dashboard" }];
@@ -26,15 +19,10 @@ function navItems(me: Me | null) {
 }
 
 export default function AppShell({ children }: { children: ReactNode }) {
-  const [me, setMe] = useState<Me | null>(null);
+  // NOTE: me comes from MeProvider above <Routes> — never fetch here,
+  // or the badge refetches (and visibly refreshes) on every page jump.
+  const me = useMe();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    api
-      .get("/auth/me/")
-      .then((res) => setMe(res.data))
-      .catch(() => setMe(null));
-  }, []);
 
   const logout = () => {
     localStorage.removeItem("access_token");
@@ -68,7 +56,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={logout}
-              className="border-2 border-neutral-950 bg-white px-4 py-1.5 text-[13px] font-bold tracking-[-0.01em] shadow-[3px_3px_0_#0a0a0b] transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#0a0a0b] active:translate-x-0 active:translate-y-0 active:shadow-none"
+              className="border-2 border-neutral-950 bg-white px-4 py-1.5 text-[13px] font-bold tracking-[-0.01em] shadow-[3px_3px_0_#0a0a0b] transition hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_#0a0a0b] active:translate-x-0 active:translate-y-0 active:shadow-none cursor-pointer"
             >
               Logout
             </button>

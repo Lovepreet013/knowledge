@@ -3,6 +3,7 @@ import LoginPage from "./features/auth/login-page";
 import DashboardPage from "./features/dashboard/dashboard-page";
 import RegisterPage from "./features/auth/register-page";
 import ProtectedRoute from "./components/protected-routes";
+import { MeProvider } from "./components/me-provider";
 import PromotePage from "./features/companies/promote-page";
 import CompaniesPage from "./features/companies/companies-page";
 import DocumentsPage from "./features/documents/document-page";
@@ -13,6 +14,7 @@ import HomePage from "./components/home-page";
 
 function App() {
   return (
+    <MeProvider>
     <Routes>
       <Route path='/' element={<HomePage/>}/>
       <Route path='/login' element={<LoginPage/>}/>
@@ -42,6 +44,7 @@ function App() {
           element={<ProtectedRoute allowedRoles={["company_admin"]}><CompanyUsersPage /></ProtectedRoute>}
         />  
     </Routes>
+    </MeProvider>
   )
 }
 
