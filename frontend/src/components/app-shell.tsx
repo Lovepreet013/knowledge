@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Box, LogOut } from "lucide-react";
+import { Box, ChevronDown, LogOut, User } from "lucide-react";
+import { useMe } from "./me-provider";
+import { Hairline, StatusBadge } from "./ui";
 
 export default function AppShell({
   headerLead,
@@ -12,6 +15,9 @@ export default function AppShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const me = useMe();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const chipRef = useRef<HTMLButtonElement>(null);
 
   const logout = () => {
     localStorage.removeItem("access_token");
@@ -19,16 +25,108 @@ export default function AppShell({
     navigate("/");
   };
 
+  const closeMenu = () => setMenuOpen(false);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        chipRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  const initial = (me?.username ?? "?").slice(0, 1).toUpperCase();
+
   const headerActions = (
-    <div className="flex shrink-0 items-center gap-3">
-      <button
-        type="button"
-        onClick={logout}
-        className="pointer-events-auto relative z-10 inline-flex min-h-[40px] cursor-pointer items-center gap-2 rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-sm leading-[18.4px] font-normal text-black shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:bg-[#F5F5F5]"
-      >
-        <LogOut className="h-4 w-4" aria-hidden="true" />
-        Logout
-      </button>
+    <div className="relative flex shrink-0 items-center gap-3">
+      {me !== null && (
+        <>
+          <button
+            ref={chipRef}
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label="Account menu"
+            className="pointer-events-auto inline-flex min-h-[40px] cursor-pointer items-center gap-2 rounded-full border border-[#E0E0E0] bg-white py-1 pr-3 pl-1 text-black shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:bg-[#F5F5F5]"
+          >
+            <span
+              aria-hidden="true"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-black font-display text-xs font-medium text-white"
+            >
+              {initial}
+            </span>
+            <span className="max-w-32 truncate font-display text-base font-medium text-black">
+              {me.username}
+            </span>
+            <ChevronDown
+              aria-hidden="true"
+              className={`h-4 w-4 shrink-0 transition ${menuOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {menuOpen && (
+            <>
+              <button
+                type="button"
+                aria-hidden="true"
+                tabIndex={-1}
+                onClick={closeMenu}
+                className="pointer-events-auto fixed inset-0 z-20 cursor-default bg-transparent"
+              />
+              <div
+                role="menu"
+                aria-label="Account"
+                className="pointer-events-auto absolute top-[calc(100%+8px)] right-0 z-30 w-64 rounded-lg border border-[#E0E0E0] bg-white py-2 shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+              >
+                <div className="flex items-center gap-3 px-4 pt-1 pb-3">
+                  <span
+                    aria-hidden="true"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black font-display text-base font-medium text-white"
+                  >
+                    {initial}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display text-base font-medium text-black">
+                      {me.username}
+                    </p>
+                    <p className="truncate text-sm leading-5 font-normal text-[#666666]">
+                      {me.company_name ?? (me.company !== null ? `Company ${me.company}` : "No company")}
+                    </p>
+                  </div>
+                </div>
+                <p className="px-4 pb-3">
+                  <StatusBadge status={me.role} />
+                </p>
+                <Hairline className="w-full" />
+                <div className="flex flex-col gap-1 px-2 pt-2">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={closeMenu}
+                    className="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-left text-base leading-[23.2px] font-normal text-black transition hover:bg-[#F5F5F5]"
+                  >
+                    <User className="h-6 w-6 shrink-0" aria-hidden="true" />
+                    <span>Profile</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={logout}
+                    className="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-left text-base leading-[23.2px] font-normal text-black transition hover:bg-[#F5F5F5]"
+                  >
+                    <LogOut className="h-6 w-6 shrink-0" aria-hidden="true" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 

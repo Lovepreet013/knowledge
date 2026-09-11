@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import AppShell from "../../components/app-shell";
-import { AlertBox, LoadingBlock, StatusBadge } from "../../components/ui";
+import { AlertBox, Hairline, LoadingBlock } from "../../components/ui";
 import api from "../../lib/api";
 
 interface Me {
@@ -46,31 +46,6 @@ interface Message {
   content: string;
   sources?: Source[];
   created_at: string;
-}
-
-// Single shared sidebar separator. A plain 1px div rasterizes differently
-// depending on its sub-pixel position (browser zoom / OS display scaling),
-// so identical dividers rendered heavier or lighter by location. An SVG line
-// with crispEdges snaps to whole device pixels instead, rendering uniformly
-// everywhere. Defined at module scope so it never remounts.
-function SidebarDivider() {
-  return (
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      className="-mx-2 my-3 block h-px w-[calc(100%+16px)] shrink-0"
-    >
-      <line
-        x1="0"
-        y1="0.5"
-        x2="100%"
-        y2="0.5"
-        stroke="#e8e8e8"
-        strokeWidth="1"
-        shapeRendering="crispEdges"
-      />
-    </svg>
-  );
 }
 
 const SIDEBAR_KEY = "ka-sidebar-collapsed";
@@ -353,42 +328,6 @@ export default function DashboardPage() {
     );
   };
 
-  const renderUserCard = (rail: boolean) => (
-    <div className={`shrink-0 ${rail ? "flex flex-col items-center" : ""}`}>
-      {rail ? (
-        <span
-          aria-hidden="true"
-          title={me?.username ?? "Account"}
-          className="grid h-11 w-11 place-items-center rounded-full bg-[#EDE9FE] font-display text-base font-medium text-[#7C3AED]"
-        >
-          {(me?.username ?? "?").slice(0, 1).toUpperCase()}
-        </span>
-      ) : (
-        <div className="flex items-center gap-3">
-          <span
-            aria-hidden="true"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EDE9FE] font-display text-base font-medium text-[#7C3AED]"
-          >
-            {(me?.username ?? "?").slice(0, 1).toUpperCase()}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-base font-medium text-black">{me?.username ?? "…"}</p>
-            <div className="mt-0.5 flex min-w-0 items-center gap-2">
-              <p className="min-w-0 flex-1 truncate text-sm leading-5 font-normal text-[#666666]">
-                {me?.company_name ?? (me?.company !== null ? `Company ${me?.company}` : "No company")}
-              </p>
-              {me !== null && (
-                <span className="shrink-0">
-                  <StatusBadge status={me.role} />
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   const sidebarBody = (rail: boolean, onNavigate?: () => void, hideTop = false) => (
     <>
       {!hideTop &&
@@ -426,7 +365,7 @@ export default function DashboardPage() {
       {rail ? (
         <div aria-hidden="true" className="h-2 shrink-0" />
       ) : (
-        <SidebarDivider />
+        <Hairline className="-mx-2 my-3 w-[calc(100%+16px)]" />
       )}
       {/* New chat — primary sidebar action, SquarePen matches compose affordance */}
       <button
@@ -504,19 +443,13 @@ export default function DashboardPage() {
       {rail ? (
         <div aria-hidden="true" className="h-2 shrink-0" />
       ) : (
-        <SidebarDivider />
+        <Hairline className="-mx-2 my-3 w-[calc(100%+16px)]" />
       )}
       <div className="shrink-0">{renderNav(rail, onNavigate)}</div>
-      {navItems.length > 0 && !rail && <SidebarDivider />}
+      {navItems.length > 0 && !rail && <Hairline className="-mx-2 my-3 w-[calc(100%+16px)]" />}
       {navItems.length > 0 && rail && <div aria-hidden="true" className="h-2 shrink-0" />}
       {!rail && canChat && renderHistory(onNavigate)}
       {(!canChat || rail) && <div aria-hidden="true" className="min-h-4 flex-1" />}
-      {rail ? (
-        <div aria-hidden="true" className="h-2 shrink-0" />
-      ) : (
-        <SidebarDivider />
-      )}
-      {renderUserCard(rail)}
     </>
   );
 
@@ -648,7 +581,7 @@ export default function DashboardPage() {
         )}
 
         {me !== null && activeId !== null && (
-          <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
+          <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col bg-white px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
             <div className="space-y-3" aria-live="polite">
               {loadingMsgs && <LoadingBlock label="Loading messages…" />}
               {!loadingMsgs &&
@@ -657,8 +590,8 @@ export default function DashboardPage() {
                     <div
                       className={
                         m.role === "user"
-                          ? "max-w-[80%] rounded-lg bg-black px-4 py-3 text-base leading-[22.4px] font-normal text-white"
-                          : "max-w-[80%] rounded-lg border border-[#E0E0E0] bg-white px-4 py-3 text-base leading-[22.4px] font-normal text-black"
+                          ? "max-w-[80%] rounded-xl rounded-br-sm bg-black px-4 py-3 text-base leading-[22.4px] font-normal text-white"
+                          : "max-w-[80%] rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-3 text-base leading-[22.4px] font-normal text-black"
                       }
                     >
                       <p className="whitespace-pre-wrap">{m.content}</p>
@@ -678,7 +611,7 @@ export default function DashboardPage() {
                   </div>
                 ))}
               {sending && (
-                <p className="font-display inline-block animate-pulse rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-sm leading-[18.2px] font-normal text-black">
+                <p className="font-display inline-block animate-pulse rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-2 text-sm leading-[18.2px] font-normal text-black">
                   Thinking…
                 </p>
               )}

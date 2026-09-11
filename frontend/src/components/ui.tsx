@@ -139,6 +139,29 @@ export function StatusBadge({ status }: { status: string }) {
   );
 }
 
+// Shared hairline separator. A plain 1px div rasterizes unevenly with
+// browser zoom / OS display scaling (identical lines render heavier or
+// lighter by position), so the stroke snaps to whole device pixels instead.
+export function Hairline({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      className={`block h-px shrink-0 ${className}`}
+    >
+      <line
+        x1="0"
+        y1="0.5"
+        x2="100%"
+        y2="0.5"
+        stroke="#e8e8e8"
+        strokeWidth="1"
+        shapeRendering="crispEdges"
+      />
+    </svg>
+  );
+}
+
 export const inputCls =
   "w-full min-h-[44px] rounded-lg border border-[#CCCCCC] bg-white px-4 py-3 text-base leading-[22.4px] font-normal text-black placeholder:text-[#999999] hover:border-[#999999] focus:border-black focus:shadow-none focus:outline-none disabled:cursor-not-allowed disabled:border-[#E0E0E0] disabled:bg-[#F5F5F5] disabled:text-[#CCCCCC]";
 

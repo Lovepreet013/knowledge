@@ -21,22 +21,29 @@ const MeContext = createContext<Me | null>(null);
  */
 export function MeProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
-  const lastToken = useRef<string | null | undefined>(undefined);
+  // Token that `me` was successfully loaded for. Only marked on success —
+  // marking before the request (like the old lastToken guard) strands the
+  // app with no user under StrictMode's mount setup→cleanup→setup cycle:
+  // the first request gets cancelled and the second run bails out early.
+  const fetchedFor = useRef<string | null | undefined>(undefined);
   const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
-    if (token === lastToken.current) return;
-    lastToken.current = token;
     if (!token) {
+      fetchedFor.current = null;
       setMe(null);
       return;
     }
+    if (token === fetchedFor.current) return;
     let cancelled = false;
     api
       .get("/auth/me/")
       .then((res) => {
-        if (!cancelled) setMe(res.data);
+        if (!cancelled) {
+          fetchedFor.current = token;
+          setMe(res.data);
+        }
       })
       .catch(() => {
         if (!cancelled) setMe(null);
