@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Single-family type system (see figma.DESIGN.md §3): figmaSans first
+  /* Single-family type system (see DESIGN.md §3): figmaSans first
      (future license drop-in), then Inter Tight display, Inter body fallback.
      No monospace — every role uses the Inter stack. */
   --font-sans: "figmaSans", "Inter Tight", "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -25,6 +25,10 @@
   --color-tint-blue: #ddeaf6;
   --color-tint-lavender: #e8dff7;
   --color-tint-mint: #dff2e0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 html, body, #root {
@@ -93,6 +97,9 @@ select:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;

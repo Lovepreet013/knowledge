@@ -267,6 +267,17 @@ Fallback stack: `"Inter Tight", "Inter", ui-sans-serif, -apple-system, BlinkMacS
 - Item Padding: `12px 16px`
 - Item Hover: Background `#F5F5F5`
 
+### Workspace Sidebar (chat-app layout)
+- **Placement:** Full viewport height, flush to the left edge — no container inset, no gap; the top bar covers the main column only
+- **Widths:** `280px` expanded / `76px` icon rail collapsed; collapse persists in `localStorage`; `300px` slide-over drawer with backdrop below `1024px`
+- **Zones (top to bottom):** Brand row (bare `Box` + wordmark + collapse toggle) → "New chat" row styled like a nav item → role-gated nav (same item styling as Navigation Item) → grouped history (`Today` / `Previous 7 days` / `Older`, active item black fill) → pinned user card (avatar initial, username, company, role badge, logout) above a hairline divider
+- **Scroll Rule:** Only the history list scrolls; header, button, nav, and user card are `shrink-0` pinned — the sidebar itself never grows
+
+### Workspace Top Bar
+- **Height:** `64px` with hairline bottom divider; hamburger trigger on mobile only
+- **Title:** No centered title — navigation lives in the sidebar; the bar holds the mobile trigger plus role pill and outline Logout
+- **Actions:** Role pill plus outline Logout on the right (same header actions as the classic bar)
+
 ### Links
 
 **Text Link**

@@ -4,7 +4,7 @@ import { Box } from "lucide-react";
 import api from "../../lib/api";
 
 const inputCls =
-  "w-full min-h-[44px] rounded-lg border border-[#CCCCCC] bg-white px-4 py-3 text-base leading-[22.4px] font-normal text-black placeholder:text-[#999999] hover:border-[#999999] focus:border-black focus:shadow-none focus:outline-none disabled:cursor-not-allowed disabled:border-[#E0E0E0] disabled:bg-[#F5F5F5]";
+  "w-full min-h-[44px] rounded-lg border border-[#CCCCCC] bg-white px-4 py-3 text-base leading-[22.4px] font-normal text-black placeholder:text-[#999999] hover:border-[#999999] focus:border-[#CCCCCC] focus:shadow-none focus:outline-none disabled:cursor-not-allowed disabled:border-[#E0E0E0] disabled:bg-[#F5F5F5]";
 
 const labelCls = "mb-2 block font-display text-sm leading-[18.2px] font-normal text-black";
 
@@ -144,9 +144,6 @@ export default function RegisterPage() {
                   <label htmlFor="register-invite" className={labelCls}>
                     <span className="flex items-center gap-2">
                       Invite code
-                      <span className="font-display rounded bg-[#FFB3B3] px-2 py-0.5 text-xs leading-4 font-medium text-black">
-                        NEW
-                      </span>
                     </span>
                   </label>
                   <input

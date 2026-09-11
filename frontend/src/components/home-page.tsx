@@ -104,11 +104,7 @@ export default function HomePage() {
                 className="cursor-pointer rounded px-4 py-2 text-base leading-[23.2px] font-normal text-black transition hover:bg-[#F5F5F5]"
               >
                 {item}
-                {item === "Documents" && (
-                  <span className="font-display ml-2 rounded bg-[#EDE9FE] px-2 py-0.5 align-middle text-xs leading-4 font-medium text-[#7C3AED]">
-                    NEW
-                  </span>
-                )}
+                {item === "Documents"}
               </span>
             ))}
           </nav>
@@ -140,7 +136,7 @@ export default function HomePage() {
                 <span className="font-display rounded-full bg-[#FFB3B3] px-2 py-0.5 text-xs leading-4 font-medium text-black">
                   New
                 </span>
-                <span className="text-black">Tenant-isolated RAG with cited sources</span>
+                <span className="text-black">Tenant-isolated RAG</span>
                 <ArrowRight className="h-4 w-4 text-black" aria-hidden="true" />
               </Pill>
             </motion.div>
