@@ -245,11 +245,11 @@ export default function DashboardPage() {
   const navItems =
     me !== null
       ? [
-          { to: "/documents", label: "Documents", icon: <FileText className="h-6 w-6" aria-hidden="true" />, show: me.company !== null },
-          { to: "/company-users", label: "Users", icon: <Users className="h-6 w-6" aria-hidden="true" />, show: me.role === "company_admin" },
-          { to: "/companies", label: "Companies", icon: <Building2 className="h-6 w-6" aria-hidden="true" />, show: me.role === "superadmin" },
-          { to: "/promote", label: "Promote", icon: <UserPlus className="h-6 w-6" aria-hidden="true" />, show: me.role === "superadmin" },
-        ].filter((n) => n.show)
+        { to: "/documents", label: "Documents", icon: <FileText className="h-6 w-6" aria-hidden="true" />, show: me.company !== null },
+        { to: "/company-users", label: "Users", icon: <Users className="h-6 w-6" aria-hidden="true" />, show: me.role === "company_admin" },
+        { to: "/companies", label: "Companies", icon: <Building2 className="h-6 w-6" aria-hidden="true" />, show: me.role === "superadmin" },
+        { to: "/promote", label: "Promote", icon: <UserPlus className="h-6 w-6" aria-hidden="true" />, show: me.role === "superadmin" },
+      ].filter((n) => n.show)
       : [];
 
   const normalizedQuery = query.trim().toLowerCase();
@@ -311,9 +311,8 @@ export default function DashboardPage() {
                   }}
                   aria-current={activeId === c.id}
                   title={displayTitle(c)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-base leading-[23.2px] font-normal cursor-pointer transition ${
-                    activeId === c.id ? "bg-[#EDE9FE] text-black" : "text-black hover:bg-[#F5F5F5]"
-                  }`}
+                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-base leading-[23.2px] font-normal cursor-pointer transition ${activeId === c.id ? "bg-[#EDE9FE] text-black" : "text-black hover:bg-[#F5F5F5]"
+                    }`}
                 >
                   <span className="grid h-7 w-7 shrink-0 place-items-center">
                     <MessageSquare className={`h-6 w-6 ${activeId === c.id ? "text-[#7C3AED]" : ""}`} aria-hidden="true" />
@@ -494,137 +493,136 @@ export default function DashboardPage() {
         style={{ backgroundImage: "url(/dashboard.webp)" }}
       />
       <AppShell
-      headerLead={
-        <button
-          type="button"
-          onClick={() => setDrawer(true)}
-          aria-label="Open navigation"
-          aria-expanded={drawer}
-          className="pointer-events-auto grid h-11 w-11 cursor-pointer place-items-center rounded-lg bg-white text-black transition hover:bg-[#F5F5F5] lg:hidden"
-        >
-          <Menu className="h-5 w-5" aria-hidden="true" />
-        </button>
-      }
-      sidebar={
-        <>
-          <aside
-            aria-label="Workspace sidebar"
-            className={`hidden shrink-0 flex-col border-r border-[#f0f0f0] backdrop-blur-sm bg-white/60 px-2 py-4 lg:sticky lg:top-0 lg:flex lg:h-svh lg:min-h-0 lg:overflow-hidden ${
-              collapsed ? "w-[76px]" : "w-[280px]"
-            }`}
+        headerLead={
+          <button
+            type="button"
+            onClick={() => setDrawer(true)}
+            aria-label="Open navigation"
+            aria-expanded={drawer}
+            className="pointer-events-auto grid h-11 w-11 cursor-pointer place-items-center rounded-lg bg-white text-black transition hover:bg-[#F5F5F5] lg:hidden"
           >
-            {sidebarBody(collapsed)}
-          </aside>
-          {drawer && (
-            <div className="fixed inset-0 z-30 lg:hidden" role="dialog" aria-modal="true" aria-label="Workspace navigation">
-              <div aria-hidden="true" className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDrawer(false)} />
-              <aside className="absolute inset-y-0 left-0 flex w-[300px] flex-col overflow-hidden bg-white px-2 py-4">
-                <div className="flex shrink-0 items-center justify-between gap-2">
-                  <span className="flex min-w-0 items-center gap-3 px-2">
-                    <Box className="h-7 w-7 shrink-0 text-black" aria-hidden="true" />
-                    <span className="truncate font-display text-base leading-[23.2px] font-medium tracking-[-0.02em] text-black">
-                      Knowledge AI
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          </button>
+        }
+        sidebar={
+          <>
+            <aside
+              aria-label="Workspace sidebar"
+              className={`hidden shrink-0 flex-col border-r border-[#f0f0f0] backdrop-blur-sm bg-white/50 px-2 py-4 lg:sticky lg:top-0 lg:flex lg:h-svh lg:min-h-0 lg:overflow-hidden ${collapsed ? "w-[76px]" : "w-[280px]"
+                }`}
+            >
+              {sidebarBody(collapsed)}
+            </aside>
+            {drawer && (
+              <div className="fixed inset-0 z-30 lg:hidden" role="dialog" aria-modal="true" aria-label="Workspace navigation">
+                <div aria-hidden="true" className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDrawer(false)} />
+                <aside className="absolute inset-y-0 left-0 flex w-[300px] flex-col overflow-hidden bg-white px-2 py-4">
+                  <div className="flex shrink-0 items-center justify-between gap-2">
+                    <span className="flex min-w-0 items-center gap-3 px-2">
+                      <Box className="h-7 w-7 shrink-0 text-black" aria-hidden="true" />
+                      <span className="truncate font-display text-base leading-[23.2px] font-medium tracking-[-0.02em] text-black">
+                        Knowledge AI
+                      </span>
                     </span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setDrawer(false)}
-                    aria-label="Close navigation"
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#F5F5F5]"
-                  >
-                    <X className="h-6 w-6" aria-hidden="true" />
-                  </button>
-                </div>
-                {sidebarBody(false, () => setDrawer(false), true)}
-              </aside>
+                    <button
+                      type="button"
+                      onClick={() => setDrawer(false)}
+                      aria-label="Close navigation"
+                      className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#F5F5F5]"
+                    >
+                      <X className="h-6 w-6" aria-hidden="true" />
+                    </button>
+                  </div>
+                  {sidebarBody(false, () => setDrawer(false), true)}
+                </aside>
+              </div>
+            )}
+          </>
+        }
+      >
+        <section aria-label="Chat workspace" className="relative z-[1] flex w-full flex-1 flex-col bg-white">
+          {me === null && meError === "" && (
+            <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
+              <LoadingBlock label="Loading workspace…" />
             </div>
           )}
-        </>
-      }
-    >
-      <section aria-label="Chat workspace" className="flex w-full flex-1 flex-col">
-        {me === null && meError === "" && (
-          <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
-            <LoadingBlock label="Loading workspace…" />
-          </div>
-        )}
-        {(meError !== "" || error !== "") && (
-          <div className="mx-auto w-full max-w-3xl space-y-3 px-4 pt-4 sm:px-6">
-            {meError !== "" && <AlertBox>{meError}</AlertBox>}
-            {error !== "" && <AlertBox>{error}</AlertBox>}
-          </div>
-        )}
+          {(meError !== "" || error !== "") && (
+            <div className="mx-auto w-full max-w-3xl space-y-3 px-4 pt-4 sm:px-6">
+              {meError !== "" && <AlertBox>{meError}</AlertBox>}
+              {error !== "" && <AlertBox>{error}</AlertBox>}
+            </div>
+          )}
 
-        {me !== null && !canChat && (
-          <div className="mx-auto w-full max-w-3xl px-4 pt-4 sm:px-6">
-            <AlertBox tone="info">
-              {me.role === "superadmin"
-                ? "Superadmins have no company: manage everything from Companies + Promote."
-                : "You are not in a company yet — register again with a valid invite code."}
-            </AlertBox>
-          </div>
-        )}
+          {me !== null && !canChat && (
+            <div className="mx-auto w-full max-w-3xl px-4 pt-4 sm:px-6">
+              <AlertBox tone="info">
+                {me.role === "superadmin"
+                  ? "Superadmins have no company: manage everything from Companies + Promote."
+                  : "You are not in a company yet — register again with a valid invite code."}
+              </AlertBox>
+            </div>
+          )}
 
-        {me !== null && activeId === null && (
-          <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
-            <h1 className="font-display max-w-xl text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-balance text-black sm:text-[40px] sm:leading-[44px]">
-              Where should we begin?
-            </h1>
-            <p className="mt-3 max-w-md text-base leading-[23.2px] font-normal text-[#666666]">
-              Tenant-isolated answers with cited sources.
-            </p>
-            <div className="mt-6 w-full max-w-2xl">{renderComposer("ask-empty")}</div>
-            <p className="mt-10 max-w-xl text-sm leading-5 font-normal text-[#666666]">
-              Knowledge AI answers only from your company documents. Verify important information.
-            </p>
-          </div>
-        )}
+          {me !== null && activeId === null && (
+            <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
+              <h1 className="font-display max-w-xl text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-balance text-black sm:text-[40px] sm:leading-[44px]">
+                Where should we begin?
+              </h1>
+              <p className="mt-3 max-w-md text-base leading-[23.2px] font-normal text-[#666666]">
+                Tenant-isolated answers with cited sources.
+              </p>
+              <div className="mt-6 w-full max-w-2xl">{renderComposer("ask-empty")}</div>
+              <p className="mt-10 max-w-xl text-sm leading-5 font-normal text-[#666666]">
+                Knowledge AI answers only from your company documents. Verify important information.
+              </p>
+            </div>
+          )}
 
-        {me !== null && activeId !== null && (
-          <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col bg-white px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
-            <div className="space-y-3" aria-live="polite">
-              {loadingMsgs && <LoadingBlock label="Loading messages…" />}
-              {!loadingMsgs &&
-                messages.map((m) => (
-                  <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div
-                      className={
-                        m.role === "user"
-                          ? "max-w-[80%] rounded-xl rounded-br-sm bg-black px-4 py-3 text-base leading-[22.4px] font-normal text-white"
-                          : "max-w-[80%] rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-3 text-base leading-[22.4px] font-normal text-black"
-                      }
-                    >
-                      <p className="whitespace-pre-wrap">{m.content}</p>
-                      {(m.sources ?? []).length > 0 && (
-                        <p className="mt-2 flex flex-wrap gap-1.5">
-                          {(m.sources ?? []).map((s) => (
-                            <span
-                              key={s.document_id}
-                              className="font-display rounded bg-[#FFB3B3] px-2 py-0.5 text-xs leading-4 font-medium text-black"
-                            >
-                              {s.document_name.split("/").pop()}
-                            </span>
-                          ))}
-                        </p>
-                      )}
+          {me !== null && activeId !== null && (
+            <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col bg-white px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
+              <div className="space-y-3" aria-live="polite">
+                {loadingMsgs && <LoadingBlock label="Loading messages…" />}
+                {!loadingMsgs &&
+                  messages.map((m) => (
+                    <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={
+                          m.role === "user"
+                            ? "max-w-[80%] rounded-xl rounded-br-sm bg-black px-4 py-3 text-base leading-[22.4px] font-normal text-white"
+                            : "max-w-[80%] rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-3 text-base leading-[22.4px] font-normal text-black"
+                        }
+                      >
+                        <p className="whitespace-pre-wrap">{m.content}</p>
+                        {(m.sources ?? []).length > 0 && (
+                          <p className="mt-2 flex flex-wrap gap-1.5">
+                            {(m.sources ?? []).map((s) => (
+                              <span
+                                key={s.document_id}
+                                className="font-display rounded bg-[#FFB3B3] px-2 py-0.5 text-xs leading-4 font-medium text-black"
+                              >
+                                {s.document_name.split("/").pop()}
+                              </span>
+                            ))}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              {sending && (
-                <p className="font-display inline-block animate-pulse rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-2 text-sm leading-[18.2px] font-normal text-black">
-                  Thinking…
-                </p>
-              )}
-              <div ref={bottomRef} />
+                  ))}
+                {sending && (
+                  <p className="font-display inline-block animate-pulse rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-2 text-sm leading-[18.2px] font-normal text-black">
+                    Thinking…
+                  </p>
+                )}
+                <div ref={bottomRef} />
+              </div>
+              <div aria-hidden="true" className="min-h-6 flex-1" />
+              <div className="sticky bottom-0 z-10 bg-transparent pt-8 pb-6">
+                {renderComposer("ask-thread")}
+              </div>
             </div>
-            <div aria-hidden="true" className="min-h-6 flex-1" />
-            <div className="sticky bottom-0 z-10 bg-transparent pt-8 pb-6">
-              {renderComposer("ask-thread")}
-            </div>
-          </div>
-        )}
-      </section>
-    </AppShell>
+          )}
+        </section>
+      </AppShell>
     </>
   );
 }
