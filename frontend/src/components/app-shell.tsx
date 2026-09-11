@@ -24,7 +24,7 @@ export default function AppShell({
       <button
         type="button"
         onClick={logout}
-        className="inline-flex min-h-[40px] cursor-pointer items-center gap-2 rounded-lg border border-[#E0E0E0] bg-transparent px-4 py-2 text-sm leading-[18.4px] font-normal text-black shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:bg-[#F5F5F5]"
+        className="pointer-events-auto relative z-10 inline-flex min-h-[40px] cursor-pointer items-center gap-2 rounded-lg border border-[#E0E0E0] bg-white px-4 py-2 text-sm leading-[18.4px] font-normal text-black shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:bg-[#F5F5F5]"
       >
         <LogOut className="h-4 w-4" aria-hidden="true" />
         Logout
@@ -38,7 +38,7 @@ export default function AppShell({
         <div className="flex min-h-svh flex-col lg:flex-row">
           {sidebar}
           <div className="flex min-w-0 flex-1 flex-col">
-            <div className="sticky top-0 z-20 shrink-0 bg-white">
+            <div className="pointer-events-none fixed inset-x-0 top-0 z-20 shrink-0 bg-transparent">
               <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-5">
                 <div className="flex min-w-0 flex-1 items-center gap-2">{headerLead}</div>
                 {headerActions}

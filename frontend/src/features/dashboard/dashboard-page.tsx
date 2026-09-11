@@ -48,6 +48,31 @@ interface Message {
   created_at: string;
 }
 
+// Single shared sidebar separator. A plain 1px div rasterizes differently
+// depending on its sub-pixel position (browser zoom / OS display scaling),
+// so identical dividers rendered heavier or lighter by location. An SVG line
+// with crispEdges snaps to whole device pixels instead, rendering uniformly
+// everywhere. Defined at module scope so it never remounts.
+function SidebarDivider() {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      className="-mx-2 my-3 block h-px w-[calc(100%+16px)] shrink-0"
+    >
+      <line
+        x1="0"
+        y1="0.5"
+        x2="100%"
+        y2="0.5"
+        stroke="#e8e8e8"
+        strokeWidth="1"
+        shapeRendering="crispEdges"
+      />
+    </svg>
+  );
+}
+
 const SIDEBAR_KEY = "ka-sidebar-collapsed";
 
 function readCollapsed(): boolean {
@@ -176,6 +201,21 @@ export default function DashboardPage() {
         sources: res.data.sources ?? [],
       };
       setMessages((prev) => [...prev, assistantMessage]);
+      // First message in a placeholder-titled chat ("New chat" button flow):
+      // rename it to the question, mirroring the direct-input flow where the
+      // conversation is created with the question as its title.
+      const current = conversations.find((c) => c.id === conversationId);
+      if (current && (current.title === "New chat" || current.title.trim() === "")) {
+        const newTitle = trimmed.slice(0, 60);
+        try {
+          await api.patch(`/conversations/${conversationId}/`, { title: newTitle });
+          setConversations((prev) =>
+            prev.map((c) => (c.id === conversationId ? { ...c, title: newTitle } : c)),
+          );
+        } catch {
+          /* non-fatal — chat works, keeps the placeholder name */
+        }
+      }
     } catch {
       setError("Failed to get a response. Please try again.");
     } finally {
@@ -301,7 +341,7 @@ export default function DashboardPage() {
                   }`}
                 >
                   <span className="grid h-7 w-7 shrink-0 place-items-center">
-                    <MessageSquare className="h-6 w-6" aria-hidden="true" />
+                    <MessageSquare className={`h-6 w-6 ${activeId === c.id ? "text-[#7C3AED]" : ""}`} aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1 truncate">{displayTitle(c)}</span>
                 </button>
@@ -386,7 +426,7 @@ export default function DashboardPage() {
       {rail ? (
         <div aria-hidden="true" className="h-2 shrink-0" />
       ) : (
-        <div aria-hidden="true" className="-mx-2 my-3 h-px shrink-0 bg-[#E0E0E0]" />
+        <SidebarDivider />
       )}
       {/* New chat — primary sidebar action, SquarePen matches compose affordance */}
       <button
@@ -398,7 +438,7 @@ export default function DashboardPage() {
         title="New chat"
         aria-label={rail ? "New chat" : "Start a new chat"}
         disabled={!canChat}
-        className={`${rail ? "justify-center " : ""}flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg bg-white px-2 py-2 text-base leading-[23.2px] font-normal text-black transition hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:bg-[#F5F5F5] disabled:text-[#999999]`}
+        className={`${rail ? "justify-center " : ""}flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg bg-transparent px-2 py-2 text-base leading-[23.2px] font-normal text-black transition hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:bg-[#F5F5F5] disabled:text-[#999999]`}
       >
         <span className="grid h-7 w-7 shrink-0 place-items-center">
           <SquarePen className="h-6 w-6" aria-hidden="true" />
@@ -464,19 +504,17 @@ export default function DashboardPage() {
       {rail ? (
         <div aria-hidden="true" className="h-2 shrink-0" />
       ) : (
-        <div aria-hidden="true" className="-mx-2 my-3 h-px shrink-0 bg-[#E0E0E0]" />
+        <SidebarDivider />
       )}
       <div className="shrink-0">{renderNav(rail, onNavigate)}</div>
-      {navItems.length > 0 && !rail && (
-        <div aria-hidden="true" className="-mx-2 my-3 h-px shrink-0 bg-[#E0E0E0]" />
-      )}
+      {navItems.length > 0 && !rail && <SidebarDivider />}
       {navItems.length > 0 && rail && <div aria-hidden="true" className="h-2 shrink-0" />}
       {!rail && canChat && renderHistory(onNavigate)}
       {(!canChat || rail) && <div aria-hidden="true" className="min-h-4 flex-1" />}
       {rail ? (
         <div aria-hidden="true" className="h-2 shrink-0" />
       ) : (
-        <div aria-hidden="true" className="-mx-2 my-3 h-px shrink-0 bg-[#E0E0E0]" />
+        <SidebarDivider />
       )}
       {renderUserCard(rail)}
     </>
@@ -514,14 +552,22 @@ export default function DashboardPage() {
   );
 
   return (
-    <AppShell
+    <>
+      {/* Subtle page backdrop — fixed behind everything so the frosted
+          sidebar has something to blur; faint enough to keep text crisp. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-[0.16]"
+        style={{ backgroundImage: "url(/dashboard.webp)" }}
+      />
+      <AppShell
       headerLead={
         <button
           type="button"
           onClick={() => setDrawer(true)}
           aria-label="Open navigation"
           aria-expanded={drawer}
-          className="grid h-11 w-11 place-items-center rounded-lg text-black transition hover:bg-[#F5F5F5] lg:hidden"
+          className="pointer-events-auto grid h-11 w-11 cursor-pointer place-items-center rounded-lg bg-white text-black transition hover:bg-[#F5F5F5] lg:hidden"
         >
           <Menu className="h-5 w-5" aria-hidden="true" />
         </button>
@@ -530,7 +576,7 @@ export default function DashboardPage() {
         <>
           <aside
             aria-label="Workspace sidebar"
-            className={`hidden shrink-0 flex-col border-r border-[#E0E0E0] bg-white/80 px-2 py-4 backdrop-blur-xl lg:sticky lg:top-0 lg:flex lg:h-svh lg:min-h-0 lg:overflow-hidden ${
+            className={`hidden shrink-0 flex-col border-r border-[#f0f0f0] backdrop-blur-sm bg-white/60 px-2 py-4 lg:sticky lg:top-0 lg:flex lg:h-svh lg:min-h-0 lg:overflow-hidden ${
               collapsed ? "w-[76px]" : "w-[280px]"
             }`}
           >
@@ -539,7 +585,7 @@ export default function DashboardPage() {
           {drawer && (
             <div className="fixed inset-0 z-30 lg:hidden" role="dialog" aria-modal="true" aria-label="Workspace navigation">
               <div aria-hidden="true" className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDrawer(false)} />
-              <aside className="absolute inset-y-0 left-0 flex w-[300px] flex-col overflow-hidden bg-white/90 px-2 py-4 backdrop-blur-xl">
+              <aside className="absolute inset-y-0 left-0 flex w-[300px] flex-col overflow-hidden bg-white px-2 py-4">
                 <div className="flex shrink-0 items-center justify-between gap-2">
                   <span className="flex min-w-0 items-center gap-3 px-2">
                     <Box className="h-7 w-7 shrink-0 text-black" aria-hidden="true" />
@@ -587,7 +633,7 @@ export default function DashboardPage() {
         )}
 
         {me !== null && activeId === null && (
-          <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
+          <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
             <h1 className="font-display max-w-xl text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-balance text-black sm:text-[40px] sm:leading-[44px]">
               Where should we begin?
             </h1>
@@ -602,7 +648,7 @@ export default function DashboardPage() {
         )}
 
         {me !== null && activeId !== null && (
-          <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-3xl flex-1 flex-col px-4 pt-4 pb-0 sm:px-6 lg:pt-6">
+          <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
             <div className="space-y-3" aria-live="polite">
               {loadingMsgs && <LoadingBlock label="Loading messages…" />}
               {!loadingMsgs &&
@@ -639,15 +685,13 @@ export default function DashboardPage() {
               <div ref={bottomRef} />
             </div>
             <div aria-hidden="true" className="min-h-6 flex-1" />
-            <div className="sticky bottom-0 bg-white pt-2 pb-6">
+            <div className="sticky bottom-0 z-10 bg-transparent pt-8 pb-6">
               {renderComposer("ask-thread")}
-              <p className="mt-3 text-center text-sm leading-5 font-normal text-[#666666]">
-                Knowledge AI answers only from your company documents. Verify important information.
-              </p>
             </div>
           </div>
         )}
       </section>
     </AppShell>
+    </>
   );
 }

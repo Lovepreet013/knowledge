@@ -51,7 +51,7 @@ body {
    veil so black grotesk type stays readable, plus dotted texture. */
 .hero-bg {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.55) 45%, rgba(255, 255, 255, 0.94) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.45) 45%, rgba(255, 255, 255, 0.88) 100%),
     url("/hero-bg.webp") center 35% / cover no-repeat;
 }
 

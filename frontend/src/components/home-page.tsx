@@ -86,7 +86,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white font-sans text-black antialiased">
-      <div className="sticky top-0 z-20 bg-white shadow-[0px_1px_0px_0px_rgba(0,0,0,0.16)]">
+      <div className="sticky top-0 z-20 border-b border-[#e8e8e8] bg-white">
         <motion.header
           className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-5 lg:px-8"
         >

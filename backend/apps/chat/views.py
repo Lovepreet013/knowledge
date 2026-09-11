@@ -27,6 +27,20 @@ class ConversationListCreateView(generics.ListCreateAPIView):
         serializer.save(user=self.request.user, company=self.request.user.company)  # type: ignore
 
 
+class ConversationDetailView(generics.UpdateAPIView):
+    """Rename a conversation (e.g. first question replaces "New chat")."""
+
+    serializer_class = ConversationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_url_kwarg = "conversation_id"
+
+    def get_queryset(self):
+        # Same tenant + ownership isolation as message access.
+        return Conversation.objects.filter(
+            user=self.request.user, company=self.request.user.company  # type: ignore
+        )
+
+
 class MessageListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
