@@ -1,6 +1,7 @@
 import { Navigate } from "react-router";
 import { useEffect, useState } from "react";
 import api from "../lib/api";
+import { LoadingBlock } from "./ui";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -48,9 +49,13 @@ export default function ProtectedRoute(props: ProtectedRouteProps) {
     return <Navigate to="/" replace />;
   }
 
-  // Still waiting on the /me/ request — show a simple loading message.
+  // Still waiting on the /me/ request — show the design-system loader.
   if (isLoading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
+        <LoadingBlock label="Loading…" />
+      </div>
+    );
   }
 
   // Rule 2: if this route requires specific roles, check the user's role.

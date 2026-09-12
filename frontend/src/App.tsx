@@ -1,14 +1,9 @@
-import { Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 import LoginPage from "./features/auth/login-page";
 import DashboardPage from "./features/dashboard/dashboard-page";
 import RegisterPage from "./features/auth/register-page";
 import ProtectedRoute from "./components/protected-routes";
 import { MeProvider } from "./components/me-provider";
-import PromotePage from "./features/companies/promote-page";
-import CompaniesPage from "./features/companies/companies-page";
-import DocumentsPage from "./features/documents/document-page";
-import ChatPage from "./features/chat/chat-page";
-import CompanyUsersPage from "./features/companies/company-user-page";
 import HomePage from "./components/home-page";
 
 
@@ -24,24 +19,24 @@ function App() {
           element={<ProtectedRoute><DashboardPage/></ProtectedRoute>}
         />
         <Route path="/documents" element={
-          <ProtectedRoute requireCompany><DocumentsPage /></ProtectedRoute>
+          <ProtectedRoute requireCompany><Navigate to="/dashboard?tab=documents" replace /></ProtectedRoute>
           } 
         />
         <Route path="/chat" element={
-          <ProtectedRoute requireCompany><ChatPage /></ProtectedRoute>
+          <ProtectedRoute requireCompany><Navigate to="/dashboard" replace /></ProtectedRoute>
           } 
         />
         <Route path="/companies" element={
-          <ProtectedRoute allowedRoles={["superadmin"]}><CompaniesPage /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={["superadmin"]}><Navigate to="/dashboard?tab=companies" replace /></ProtectedRoute>
           } 
         />
         <Route path="/promote" element={
-          <ProtectedRoute allowedRoles={["superadmin"]}><PromotePage /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={["superadmin"]}><Navigate to="/dashboard?tab=promote" replace /></ProtectedRoute>
           } 
         />
         <Route
           path="/company-users"
-          element={<ProtectedRoute allowedRoles={["company_admin"]}><CompanyUsersPage /></ProtectedRoute>}
+          element={<ProtectedRoute allowedRoles={["company_admin"]}><Navigate to="/dashboard?tab=users" replace /></ProtectedRoute>}
         />  
     </Routes>
     </MeProvider>

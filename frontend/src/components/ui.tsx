@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LoaderCircle } from "lucide-react";
 
 // Figma system tuned with Jasper refs: black stays the app primary CTA;
 // 12px 22px / 8px / 46px desktop, compact sm variant for nav/hero.
@@ -114,10 +114,42 @@ export function EmptyState({ title, sub }: { title: string; sub: string }) {
   );
 }
 
+export function Spinner({ label = "Loading" }: { label?: string }) {
+  return (
+    <span role="status" aria-label={label} className="inline-flex items-center justify-center">
+      <LoaderCircle className="h-5 w-5 animate-spin text-black" aria-hidden="true" />
+    </span>
+  );
+}
+
+// Text-based "Thinking" indicator for AI response generation — same Inter
+// stack and bubble text sizing as assistant messages, no spinner icon.
+// Dots use CSS bounce (neutralized under prefers-reduced-motion in index.css).
+export function ThinkingIndicator({ label = "Thinking" }: { label?: string }) {
+  return (
+    <span
+      role="status"
+      aria-label={label}
+      aria-live="polite"
+      className="inline-flex items-center gap-1.5 text-base leading-[22.4px] font-normal text-black"
+    >
+      <span>{label}</span>
+      <span aria-hidden="true" className="inline-flex items-center gap-1">
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-black [animation-delay:0ms]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-black [animation-delay:150ms]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-black [animation-delay:300ms]" />
+      </span>
+    </span>
+  );
+}
+
 export function LoadingBlock({ label = "Loading…" }: { label?: string }) {
   return (
-    <div className="rounded-lg border border-[#E0E0E0] bg-white px-4 py-3" aria-busy="true">
-      <p className="animate-pulse font-display text-sm leading-[18.2px] font-normal text-black">{label}</p>
+    <div
+      className="flex items-center justify-center bg-transparent px-4 py-4"
+      aria-busy="true"
+    >
+      <Spinner label={label} />
     </div>
   );
 }

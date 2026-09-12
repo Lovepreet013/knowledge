@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink } from "react-router";
+import { useSearchParams } from "react-router";
 import { useReducedMotion } from "framer-motion";
 import {
   ArrowUp,
@@ -17,8 +17,12 @@ import {
   X,
 } from "lucide-react";
 import AppShell from "../../components/app-shell";
-import { AlertBox, Hairline, LoadingBlock } from "../../components/ui";
+import { AlertBox, Hairline, LoadingBlock, ThinkingIndicator } from "../../components/ui";
 import api from "../../lib/api";
+import UsersTab from "./tabs/users-tab";
+import DocumentsTab from "./tabs/documents-tab";
+import CompaniesTab from "./tabs/companies-tab";
+import PromoteTab from "./tabs/promote-tab";
 
 interface Me {
   id: number;
@@ -73,6 +77,7 @@ export default function DashboardPage() {
   const [drawer, setDrawer] = useState(false);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const reduceMotion = useReducedMotion();
   const bottomRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLInputElement>(null);
@@ -215,6 +220,7 @@ export default function DashboardPage() {
       const res = await api.post("/conversations/", { title: "New chat" });
       await loadConversations();
       setActiveId(res.data.id);
+      goTab("chat");
       setError("");
       setDrawer(false);
       requestAnimationFrame(() => composerRef.current?.focus());
@@ -239,18 +245,44 @@ export default function DashboardPage() {
 
   const pickConversation = (id: number) => {
     setActiveId(id);
+    goTab("chat");
     setDrawer(false);
   };
 
   const navItems =
     me !== null
       ? [
-        { to: "/documents", label: "Documents", icon: <FileText className="h-6 w-6" aria-hidden="true" />, show: me.company !== null },
-        { to: "/company-users", label: "Users", icon: <Users className="h-6 w-6" aria-hidden="true" />, show: me.role === "company_admin" },
-        { to: "/companies", label: "Companies", icon: <Building2 className="h-6 w-6" aria-hidden="true" />, show: me.role === "superadmin" },
-        { to: "/promote", label: "Promote", icon: <UserPlus className="h-6 w-6" aria-hidden="true" />, show: me.role === "superadmin" },
+        { id: "documents", label: "Documents", icon: <FileText className="h-6 w-6" aria-hidden="true" />, show: me.company !== null },
+        { id: "users", label: "Users", icon: <Users className="h-6 w-6" aria-hidden="true" />, show: me.role === "company_admin" },
+        { id: "companies", label: "Companies", icon: <Building2 className="h-6 w-6" aria-hidden="true" />, show: me.role === "superadmin" },
+        { id: "promote", label: "Promote", icon: <UserPlus className="h-6 w-6" aria-hidden="true" />, show: me.role === "superadmin" },
       ].filter((n) => n.show)
       : [];
+
+  const rawTab = searchParams.get("tab") ?? "chat";
+
+  const isTabAllowed = (t: string): boolean => {
+    if (t === "chat") return true;
+    if (me === null) return false;
+    if (t === "documents") return me.company !== null;
+    if (t === "users") return me.role === "company_admin";
+    if (t === "companies" || t === "promote") return me.role === "superadmin";
+    return false;
+  };
+
+  const activeTab = isTabAllowed(rawTab) ? rawTab : "chat";
+
+  useEffect(() => {
+    if (me !== null && rawTab !== "chat" && activeTab === "chat") {
+      setSearchParams({}, { replace: true });
+    }
+  }, [me, rawTab, activeTab, setSearchParams]);
+
+  const goTab = (id: string) => {
+    const current = searchParams.get("tab") ?? "chat";
+    if (current === id) return;
+    setSearchParams(id === "chat" ? {} : { tab: id });
+  };
 
   const normalizedQuery = query.trim().toLowerCase();
   const visibleConversations =
@@ -260,21 +292,26 @@ export default function DashboardPage() {
 
   const renderNav = (rail: boolean, onNavigate?: () => void) => (
     <nav aria-label="Workspace" className={rail ? "flex flex-col gap-2" : "flex flex-col gap-1"}>
-      {navItems.map((n) => (
-        <NavLink
-          key={n.to}
-          to={n.to}
-          onClick={onNavigate}
-          title={rail ? n.label : undefined}
-          aria-label={rail ? n.label : undefined}
-          className={({ isActive }) =>
-            `flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 py-2 text-base leading-[23.2px] font-normal cursor-pointer transition hover:bg-[#F5F5F5] ${rail ? "justify-center " : ""}${isActive ? "bg-[#F5F5F5] text-[#972121]" : "text-black"}`
-          }
-        >
-          <span className="grid h-7 w-7 shrink-0 place-items-center">{n.icon}</span>
-          {!rail && <span className="whitespace-nowrap">{n.label}</span>}
-        </NavLink>
-      ))}
+      {navItems.map((n) => {
+        const selected = activeTab === n.id;
+        return (
+          <button
+            key={n.id}
+            type="button"
+            onClick={() => {
+              goTab(n.id);
+              onNavigate?.();
+            }}
+            title={rail ? n.label : undefined}
+            aria-label={n.label}
+            aria-current={selected ? "page" : undefined}
+            className={`flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 py-2 text-base leading-[23.2px] font-normal cursor-pointer transition ${rail ? "justify-center " : ""}${selected ? "bg-[#FFB3B3]/40 text-[#972121]" : "text-black hover:bg-[#FFB3B3]/40"}`}
+          >
+            <span className="grid h-7 w-7 shrink-0 place-items-center">{n.icon}</span>
+            {!rail && <span className="whitespace-nowrap">{n.label}</span>}
+          </button>
+        );
+      })}
     </nav>
   );
 
@@ -309,13 +346,13 @@ export default function DashboardPage() {
                     pickConversation(c.id);
                     onNavigate?.();
                   }}
-                  aria-current={activeId === c.id}
+                  aria-current={activeId === c.id && activeTab === "chat"}
                   title={displayTitle(c)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-base leading-[23.2px] font-normal cursor-pointer transition ${activeId === c.id ? "bg-[#EDE9FE] text-black" : "text-black hover:bg-[#F5F5F5]"
+                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-base leading-[23.2px] font-normal cursor-pointer transition ${activeId === c.id && activeTab === "chat" ? "bg-[#FFB3B3]/40 text-[#972121]" : "text-black hover:bg-[#FFB3B3]/40"
                     }`}
                 >
                   <span className="grid h-7 w-7 shrink-0 place-items-center">
-                    <MessageSquare className={`h-6 w-6 ${activeId === c.id ? "text-[#7C3AED]" : ""}`} aria-hidden="true" />
+                    <MessageSquare className="h-6 w-6" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1 truncate">{displayTitle(c)}</span>
                 </button>
@@ -336,7 +373,7 @@ export default function DashboardPage() {
             onClick={toggleCollapsed}
             title="Expand sidebar"
             aria-label="Expand sidebar"
-            className="flex min-h-[44px] w-full shrink-0 cursor-pointer items-center justify-center gap-3 rounded-lg px-2 py-2 text-black transition hover:bg-[#F5F5F5]"
+            className="flex min-h-[44px] w-full shrink-0 cursor-pointer items-center justify-center gap-3 rounded-lg px-2 py-2 text-black transition hover:bg-[#FFB3B3]/40"
           >
             <span className="grid h-7 w-7 shrink-0 place-items-center">
               <PanelLeftOpen className="h-6 w-6" aria-hidden="true" />
@@ -355,7 +392,7 @@ export default function DashboardPage() {
               onClick={toggleCollapsed}
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#F5F5F5]"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#FFB3B3]/40"
             >
               <PanelLeftClose className="h-6 w-6" aria-hidden="true" />
             </button>
@@ -376,7 +413,7 @@ export default function DashboardPage() {
         title="New chat"
         aria-label={rail ? "New chat" : "Start a new chat"}
         disabled={!canChat}
-        className={`${rail ? "justify-center " : ""}flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg bg-transparent px-2 py-2 text-base leading-[23.2px] font-normal text-black transition hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:bg-[#F5F5F5] disabled:text-[#999999]`}
+        className={`${rail ? "justify-center " : ""}flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg bg-transparent px-2 py-2 text-base leading-[23.2px] font-normal text-black transition hover:bg-[#FFB3B3]/40 disabled:cursor-not-allowed disabled:bg-[#F5F5F5] disabled:text-[#999999]`}
       >
         <span className="grid h-7 w-7 shrink-0 place-items-center">
           <SquarePen className="h-6 w-6" aria-hidden="true" />
@@ -390,7 +427,7 @@ export default function DashboardPage() {
           onClick={toggleCollapsed}
           title="Search chats"
           aria-label="Search chats"
-          className="mt-2 flex min-h-[44px] w-full shrink-0 cursor-pointer items-center justify-center gap-3 rounded-lg px-2 py-2 text-black transition hover:bg-[#F5F5F5]"
+          className="mt-2 flex min-h-[44px] w-full shrink-0 cursor-pointer items-center justify-center gap-3 rounded-lg px-2 py-2 text-black transition hover:bg-[#FFB3B3]/40"
         >
           <span className="grid h-7 w-7 shrink-0 place-items-center">
             <Search className="h-6 w-6" aria-hidden="true" />
@@ -421,7 +458,7 @@ export default function DashboardPage() {
               setSearchOpen(false);
             }}
             aria-label="Clear search"
-            className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-lg text-[#666666] transition hover:bg-[#F5F5F5] hover:text-black"
+            className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-lg text-[#666666] transition hover:bg-[#FFB3B3]/40 hover:text-black"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -431,7 +468,7 @@ export default function DashboardPage() {
           type="button"
           onClick={() => setSearchOpen(true)}
           disabled={!canChat}
-          className="mt-1 flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left text-base leading-[23.2px] font-normal text-black transition hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:text-[#999999] disabled:hover:bg-transparent"
+          className="mt-1 flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left text-base leading-[23.2px] font-normal text-black transition hover:bg-[#FFB3B3]/40 disabled:cursor-not-allowed disabled:text-[#999999] disabled:hover:bg-transparent"
         >
           <span className="grid h-7 w-7 shrink-0 place-items-center">
             <Search className="h-6 w-6" aria-hidden="true" />
@@ -485,13 +522,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* Subtle page backdrop — fixed behind everything so the frosted
-          sidebar has something to blur; faint enough to keep text crisp. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-[0.16]"
-        style={{ backgroundImage: "url(/dashboard.webp)" }}
-      />
       <AppShell
         headerLead={
           <button
@@ -508,7 +538,7 @@ export default function DashboardPage() {
           <>
             <aside
               aria-label="Workspace sidebar"
-              className={`hidden shrink-0 flex-col border-r border-[#f0f0f0] backdrop-blur-sm bg-white/50 px-2 py-4 lg:sticky lg:top-0 lg:flex lg:h-svh lg:min-h-0 lg:overflow-hidden ${collapsed ? "w-[76px]" : "w-[280px]"
+              className={`hidden shrink-0 flex-col border-r border-[#f0f0f0] bg-white px-2 py-4 lg:sticky lg:top-0 lg:flex lg:h-svh lg:min-h-0 lg:overflow-hidden ${collapsed ? "w-[76px]" : "w-[280px]"
                 }`}
             >
               {sidebarBody(collapsed)}
@@ -528,7 +558,7 @@ export default function DashboardPage() {
                       type="button"
                       onClick={() => setDrawer(false)}
                       aria-label="Close navigation"
-                      className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#F5F5F5]"
+                      className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#FFB3B3]/40"
                     >
                       <X className="h-6 w-6" aria-hidden="true" />
                     </button>
@@ -540,9 +570,9 @@ export default function DashboardPage() {
           </>
         }
       >
-        <section aria-label="Chat workspace" className="relative z-[1] flex w-full flex-1 flex-col bg-white">
+        <section aria-label="Workspace" className="relative z-[1] flex w-full flex-1 flex-col bg-white">
           {me === null && meError === "" && (
-            <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
+            <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 items-center justify-center px-4 py-10 sm:px-6">
               <LoadingBlock label="Loading workspace…" />
             </div>
           )}
@@ -563,6 +593,7 @@ export default function DashboardPage() {
             </div>
           )}
 
+          <div className={activeTab === "chat" ? "flex w-full flex-1 flex-col" : "hidden"}>
           {me !== null && activeId === null && (
             <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
               <h1 className="font-display max-w-xl text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-balance text-black sm:text-[40px] sm:leading-[44px]">
@@ -579,11 +610,14 @@ export default function DashboardPage() {
           )}
 
           {me !== null && activeId !== null && (
-            <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col bg-white px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
-              <div className="space-y-3" aria-live="polite">
-                {loadingMsgs && <LoadingBlock label="Loading messages…" />}
-                {!loadingMsgs &&
-                  messages.map((m) => (
+            <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
+              {loadingMsgs ? (
+                <div className="flex flex-1 items-center justify-center" aria-live="polite" aria-busy="true">
+                  <LoadingBlock label="Loading messages…" />
+                </div>
+              ) : (
+                <div className="space-y-3" aria-live="polite">
+                  {messages.map((m) => (
                     <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                       <div
                         className={
@@ -598,7 +632,7 @@ export default function DashboardPage() {
                             {(m.sources ?? []).map((s) => (
                               <span
                                 key={s.document_id}
-                                className="font-display rounded bg-[#FFB3B3] px-2 py-0.5 text-xs leading-4 font-medium text-black"
+                                className="font-display rounded bg-[#DDEAF6] px-2 py-0.5 text-xs leading-4 font-medium text-black"
                               >
                                 {s.document_name.split("/").pop()}
                               </span>
@@ -608,17 +642,49 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ))}
-                {sending && (
-                  <p className="font-display inline-block animate-pulse rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-2 text-sm leading-[18.2px] font-normal text-black">
-                    Thinking…
-                  </p>
-                )}
-                <div ref={bottomRef} />
-              </div>
-              <div aria-hidden="true" className="min-h-6 flex-1" />
+                  {sending && (
+                    <div className="inline-block rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-3">
+                      <ThinkingIndicator label="Thinking" />
+                    </div>
+                  )}
+                  <div ref={bottomRef} />
+                </div>
+              )}
+              {!loadingMsgs && <div aria-hidden="true" className="min-h-6 flex-1" />}
               <div className="sticky bottom-0 z-10 bg-transparent pt-8 pb-6">
                 {renderComposer("ask-thread")}
               </div>
+            </div>
+          )}
+          </div>
+          {me !== null && activeTab !== "chat" && (
+            <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6">
+              {activeTab === "documents" &&
+                (me.company !== null ? (
+                  <DocumentsTab canManage={me.role === "company_admin"} />
+                ) : (
+                  <AlertBox tone="info">
+                    You are not in a company yet — register again with a valid invite code.
+                  </AlertBox>
+                ))}
+              {activeTab === "users" &&
+                (me.role === "company_admin" ? (
+                  <UsersTab />
+                ) : (
+                  <AlertBox>You do not have permission to manage users.</AlertBox>
+                ))}
+              {activeTab === "companies" &&
+                (me.role === "superadmin" ? (
+                  <CompaniesTab />
+                ) : (
+                  <AlertBox>You do not have permission to manage companies.</AlertBox>
+                ))}
+              {activeTab === "promote" &&
+                (me.role === "superadmin" ? (
+                  <PromoteTab />
+                ) : (
+                  <AlertBox>You do not have permission to promote users.</AlertBox>
+                ))}
             </div>
           )}
         </section>
