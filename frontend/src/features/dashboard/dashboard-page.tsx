@@ -317,7 +317,7 @@ export default function DashboardPage() {
             title={rail ? n.label : undefined}
             aria-label={n.label}
             aria-current={selected ? "page" : undefined}
-            className={`flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 py-2 text-base leading-[23.2px] font-normal cursor-pointer transition ${rail ? "justify-center " : ""}${selected ? "bg-[#FFB3B3]/40 text-[#972121]" : "text-black hover:bg-[#FFB3B3]/40"}`}
+            className={`flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 py-2 text-base leading-[23.2px] font-normal cursor-pointer transition ${rail ? "justify-center " : ""}${selected ? "bg-[#EDE9FE] text-[#7C3AED]" : "text-black hover:bg-[#EDE9FE]/60"}`}
           >
             <span className="grid h-7 w-7 shrink-0 place-items-center">{n.icon}</span>
             {!rail && <span className="whitespace-nowrap">{n.label}</span>}
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                   }}
                   aria-current={activeId === c.id && activeTab === "chat"}
                   title={displayTitle(c)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-base leading-[23.2px] font-normal cursor-pointer transition ${activeId === c.id && activeTab === "chat" ? "bg-[#FFB3B3]/40 text-[#972121]" : "text-black hover:bg-[#FFB3B3]/40"
+                  className={`flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-base leading-[23.2px] font-normal cursor-pointer transition ${activeId === c.id && activeTab === "chat" ? "bg-[#EDE9FE] text-[#7C3AED]" : "text-black hover:bg-[#EDE9FE]/60"
                     }`}
                 >
                   <span className="grid h-7 w-7 shrink-0 place-items-center">
@@ -385,7 +385,7 @@ export default function DashboardPage() {
             onClick={toggleCollapsed}
             title="Expand sidebar"
             aria-label="Expand sidebar"
-            className="flex min-h-[44px] w-full shrink-0 cursor-pointer items-center justify-center gap-3 rounded-lg px-2 py-2 text-black transition hover:bg-[#FFB3B3]/40"
+            className="flex min-h-[44px] w-full shrink-0 cursor-pointer items-center justify-center gap-3 rounded-lg px-2 py-2 text-black transition hover:bg-[#EDE9FE]/60"
           >
             <span className="grid h-7 w-7 shrink-0 place-items-center">
               <PanelLeftOpen className="h-6 w-6" aria-hidden="true" />
@@ -395,8 +395,8 @@ export default function DashboardPage() {
           <div className="flex shrink-0 items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-3 px-2">
               <Box className="h-7 w-7 shrink-0 text-black" aria-hidden="true" />
-              <span className="truncate font-display text-base leading-[23.2px] font-medium tracking-[-0.02em] text-black">
-                Knowledge AI
+              <span className="truncate font-display text-base leading-[28px] font-medium tracking-[-0.02em] text-black">
+                Knowledge
               </span>
             </span>
             <button
@@ -404,7 +404,7 @@ export default function DashboardPage() {
               onClick={toggleCollapsed}
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#FFB3B3]/40"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#EDE9FE]/60"
             >
               <PanelLeftClose className="h-6 w-6" aria-hidden="true" />
             </button>
@@ -425,7 +425,7 @@ export default function DashboardPage() {
         title="New chat"
         aria-label={rail ? "New chat" : "Start a new chat"}
         disabled={!canChat}
-        className={`${rail ? "justify-center " : ""}flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg bg-transparent px-2 py-2 text-base leading-[23.2px] font-normal text-black transition hover:bg-[#FFB3B3]/40 disabled:cursor-not-allowed disabled:bg-[#F5F5F5] disabled:text-[#999999]`}
+        className={`${rail ? "justify-center " : ""}flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg bg-transparent px-2 py-2 text-base leading-[23.2px] font-normal text-black transition hover:bg-[#EDE9FE]/60 disabled:cursor-not-allowed disabled:bg-[#F5F5F5] disabled:text-[#999999]`}
       >
         <span className="grid h-7 w-7 shrink-0 place-items-center">
           <SquarePen className="h-6 w-6" aria-hidden="true" />
@@ -439,7 +439,7 @@ export default function DashboardPage() {
           onClick={toggleCollapsed}
           title="Search chats"
           aria-label="Search chats"
-          className="mt-2 flex min-h-[44px] w-full shrink-0 cursor-pointer items-center justify-center gap-3 rounded-lg px-2 py-2 text-black transition hover:bg-[#FFB3B3]/40"
+          className="mt-2 flex min-h-[44px] w-full shrink-0 cursor-pointer items-center justify-center gap-3 rounded-lg px-2 py-2 text-black transition hover:bg-[#EDE9FE]/60"
         >
           <span className="grid h-7 w-7 shrink-0 place-items-center">
             <Search className="h-6 w-6" aria-hidden="true" />
@@ -470,7 +470,7 @@ export default function DashboardPage() {
               setSearchOpen(false);
             }}
             aria-label="Clear search"
-            className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-lg text-[#666666] transition hover:bg-[#FFB3B3]/40 hover:text-black"
+            className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-lg text-[#666666] transition hover:bg-[#EDE9FE]/60 hover:text-black"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -480,7 +480,7 @@ export default function DashboardPage() {
           type="button"
           onClick={() => setSearchOpen(true)}
           disabled={!canChat}
-          className="mt-1 flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left text-base leading-[23.2px] font-normal text-black transition hover:bg-[#FFB3B3]/40 disabled:cursor-not-allowed disabled:text-[#999999] disabled:hover:bg-transparent"
+          className="mt-1 flex min-h-[44px] w-full shrink-0 cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left text-base leading-[23.2px] font-normal text-black transition hover:bg-[#EDE9FE]/60 disabled:cursor-not-allowed disabled:text-[#999999] disabled:hover:bg-transparent"
         >
           <span className="grid h-7 w-7 shrink-0 place-items-center">
             <Search className="h-6 w-6" aria-hidden="true" />
@@ -562,15 +562,15 @@ export default function DashboardPage() {
                   <div className="flex shrink-0 items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-3 px-2">
                       <Box className="h-7 w-7 shrink-0 text-black" aria-hidden="true" />
-                      <span className="truncate font-display text-base leading-[23.2px] font-medium tracking-[-0.02em] text-black">
-                        Knowledge AI
+                      <span className="truncate font-display text-base leading-[28px] font-medium tracking-[-0.02em] text-black">
+                        Knowledge
                       </span>
                     </span>
                     <button
                       type="button"
                       onClick={() => setDrawer(false)}
                       aria-label="Close navigation"
-                      className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#FFB3B3]/40"
+                      className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-black cursor-pointer transition hover:bg-[#EDE9FE]/60"
                     >
                       <X className="h-6 w-6" aria-hidden="true" />
                     </button>
@@ -616,7 +616,7 @@ export default function DashboardPage() {
               </p>
               <div className="mt-6 w-full max-w-2xl">{renderComposer("ask-empty")}</div>
               <p className="mt-10 max-w-xl text-sm leading-5 font-normal text-[#666666]">
-                Knowledge AI answers only from your company documents. Verify important information.
+                Knowledge answers only from your company documents. Verify important information.
               </p>
             </div>
           )}

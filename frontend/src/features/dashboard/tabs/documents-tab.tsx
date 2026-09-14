@@ -166,18 +166,10 @@ export default function DocumentsTab({ canManage }: { canManage: boolean }) {
   return (
     <div className="space-y-6">
       <div>
-        <p className="font-display inline-flex items-center gap-2 rounded-lg bg-[#FFB3B3]/40 px-2 py-0.5 text-sm leading-[18.2px] font-medium text-[#972121]">
-          <FileText className="h-4 w-4" aria-hidden="true" />
-          Documents
-        </p>
-        <div className="mt-4">
+        <div>
           <h1 className="font-display text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black sm:text-[40px] sm:leading-[44px]">
             Company documents
           </h1>
-          <p className="mt-3 max-w-xl text-base leading-[23.2px] font-normal text-[#666666]">
-            Upload PDFs/TXTs. They chunk and embed automatically for
-            tenant-isolated search.
-          </p>
         </div>
       </div>
 
@@ -196,12 +188,12 @@ export default function DocumentsTab({ canManage }: { canManage: boolean }) {
             void uploadFiles(Array.from(e.dataTransfer.files ?? []));
           }}
           className={`rounded-xl border border-dashed p-6 text-center transition sm:p-8 ${dragging
-              ? "border-[#972121] bg-[#FFB3B3]/20"
-              : "border-[#FFB3B3] bg-[#FFB3B3]/10"
+            ? "border-[#7C3AED] bg-[#EDE9FE]"
+            : "border-[#EDE9FE] bg-[#EDE9FE]/40"
             }`}
         >
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#FFB3B3]/40">
-            <FileUp className="h-6 w-6 text-[#972121]" aria-hidden="true" />
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#EDE9FE]">
+            <FileUp className="h-6 w-6 text-[#7C3AED]" aria-hidden="true" />
           </div>
           <p className="font-display mt-4 text-base font-medium tracking-[-0.02em] text-black">
             Upload documents
@@ -229,9 +221,6 @@ export default function DocumentsTab({ canManage }: { canManage: boolean }) {
             aria-label="Choose PDF or TXT files"
             className="hidden"
           />
-          <p className="mt-4 text-sm leading-5 font-normal text-[#666666]">
-            PDF / TXT only • Files are automatically chunked and embedded.
-          </p>
         </div>
       )}
 
@@ -337,9 +326,9 @@ export default function DocumentsTab({ canManage }: { canManage: boolean }) {
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
                   <span
                     aria-hidden="true"
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#FFB3B3]/30"
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EDE9FE]"
                   >
-                    <FileText className="h-5 w-5 text-[#972121]" />
+                    <FileText className="h-5 w-5 text-[#7C3AED]" />
                   </span>
                   <div className="min-w-0 flex-1 basis-48">
                     <p

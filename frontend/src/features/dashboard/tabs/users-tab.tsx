@@ -48,7 +48,6 @@ export default function UsersTab() {
   return (
     <div className="space-y-5">
       <PageHeader
-        badge="Company admin"
         title="Company users"
         sub="Activate or deactivate members of your company only."
       />
@@ -66,26 +65,36 @@ export default function UsersTab() {
             key={u.id}
             className="rounded-lg border border-[#E0E0E0] bg-white p-4 transition hover:border-[#CCCCCC]"
           >
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-base font-medium tracking-[-0.02em] text-black">
-                {u.username} <span className="text-sm font-normal text-[#666666]">#{u.id}</span>
-              </p>
-              <span className="font-display rounded border border-[#E0E0E0] bg-[#F5F5F5] px-2 py-0.5 text-xs font-medium text-black">
-                {u.role}
+            <div className="flex items-center gap-4">
+              <span
+                aria-hidden="true"
+                className="font-display grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EDE9FE] text-sm font-medium text-[#7C3AED]"
+              >
+                {u.username.slice(0, 1).toUpperCase() || "?"}
               </span>
-              <StatusBadge status={u.is_active ? "active" : "inactive"} />
-              <span className="ml-auto">
-                <SharpButton
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => void toggleActive(u)}
-                  disabled={updatingId === u.id}
-                >
-                  {updatingId === u.id ? "Saving…" : u.is_active ? "Deactivate" : "Activate"}
-                </SharpButton>
-              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-base font-medium tracking-[-0.02em] text-black">
+                    {u.username} <span className="text-sm font-normal text-[#666666]">#{u.id}</span>
+                  </p>
+                  <span className="font-display rounded border border-[#E0E0E0] bg-[#F5F5F5] px-2 py-0.5 text-xs font-medium text-black">
+                    {u.role}
+                  </span>
+                  <StatusBadge status={u.is_active ? "active" : "inactive"} />
+                  <span className="ml-auto">
+                    <SharpButton
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => void toggleActive(u)}
+                      disabled={updatingId === u.id}
+                    >
+                      {updatingId === u.id ? "Saving…" : u.is_active ? "Deactivate" : "Activate"}
+                    </SharpButton>
+                  </span>
+                </div>
+                <p className="mt-1.5 truncate text-sm font-normal text-[#666666]">{u.email}</p>
+              </div>
             </div>
-            <p className="mt-1.5 truncate text-sm font-normal text-[#666666]">{u.email}</p>
           </li>
         ))}
       </ul>

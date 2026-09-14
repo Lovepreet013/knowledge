@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Box, ChevronDown, LogOut, User } from "lucide-react";
 import { useMe } from "./me-provider";
+import { clearAuthTokens } from "../lib/api";
 import { Hairline, StatusBadge } from "./ui";
 
 export default function AppShell({
@@ -20,8 +21,7 @@ export default function AppShell({
   const chipRef = useRef<HTMLButtonElement>(null);
 
   const logout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    clearAuthTokens();
     navigate("/");
   };
 
@@ -149,10 +149,10 @@ export default function AppShell({
         <>
           <div className="sticky top-0 z-20 bg-white">
             <header className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-5 lg:px-8">
-              <Link to="/dashboard" className="flex items-center gap-3" aria-label="Knowledge AI dashboard">
+              <Link to="/dashboard" className="flex items-center gap-3" aria-label="Knowledge dashboard">
                 <Box className="h-7 w-7 text-black" aria-hidden="true" />
                 <span className="font-display text-base leading-[23.2px] font-medium tracking-[-0.02em] text-black">
-                  Knowledge AI
+                  Knowledge
                 </span>
               </Link>
               {headerActions}

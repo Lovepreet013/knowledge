@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useLocation } from "react-router";
-import api from "../lib/api";
+import api, { getAccessToken } from "../lib/api";
 
 export interface Me {
   username: string;
@@ -29,7 +29,7 @@ export function MeProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
+    const token = getAccessToken();
     if (!token) {
       fetchedFor.current = null;
       setMe(null);

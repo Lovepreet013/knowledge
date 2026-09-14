@@ -6,10 +6,22 @@ from .models import User
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     invite_code = serializers.CharField(write_only=True)
+    first_name = serializers.CharField(required=True, allow_blank=False, max_length=150)
+    last_name = serializers.CharField(
+        required=False, allow_blank=True, max_length=150, default=""
+    )
 
     class Meta:
         model = User
-        fields = ["id", "email", "username", "password", "invite_code"]
+        fields = [
+            "id",
+            "email",
+            "username",
+            "password",
+            "invite_code",
+            "first_name",
+            "last_name",
+        ]
 
     def validate_invite_code(self, value):
         try:

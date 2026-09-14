@@ -1,6 +1,6 @@
 import { Navigate } from "react-router";
 import { useEffect, useState } from "react";
-import api from "../lib/api";
+import api, { getAccessToken } from "../lib/api";
 import { LoadingBlock } from "./ui";
 
 interface ProtectedRouteProps {
@@ -17,7 +17,7 @@ interface Me {
 export default function ProtectedRoute(props: ProtectedRouteProps) {
   const { children, allowedRoles, requireCompany } = props;
 
-  const token = localStorage.getItem("access_token");
+  const token = getAccessToken();
   const [me, setMe] = useState<Me | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

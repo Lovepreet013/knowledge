@@ -6,6 +6,7 @@ import {
   BookOpen,
   Box,
   ChartColumn,
+  FileText,
   FileUp,
   GraduationCap,
   HeartHandshake,
@@ -19,7 +20,8 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { MarketingCard, Pill, StatCard } from "./ui";
+import { MarketingCard, Pill } from "./ui";
+import { getAccessToken } from "../lib/api";
 
 const NAV = ["Product", "Solutions", "Documents", "Pricing", "Security"];
 
@@ -76,7 +78,7 @@ export default function HomePage() {
   const reduceMotion = useReducedMotion();
   const [activeStep, setActiveStep] = useState(0);
   const isAuthed =
-    typeof window !== "undefined" && !!localStorage.getItem("access_token");
+    typeof window !== "undefined" && getAccessToken() !== null;
 
   const rise = (delay: number) => ({
     initial: { opacity: 0, y: reduceMotion ? 0 : 16 },
@@ -90,10 +92,10 @@ export default function HomePage() {
         <motion.header
           className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-5 lg:px-8"
         >
-          <Link to="/" className="flex items-center gap-3" aria-label="Knowledge AI home">
+          <Link to="/" className="flex items-center gap-3" aria-label="Knowledge home">
             <Box className="h-7 w-7 text-black" aria-hidden="true" />
             <span className="font-display text-base leading-[23.2px] font-medium tracking-[-0.02em] text-black">
-              Knowledge AI
+              Knowledge
             </span>
           </Link>
 
@@ -129,7 +131,7 @@ export default function HomePage() {
 
       {/* ── Hero: announcement pill + grotesk display + photo bg + motif ── */}
       <main className="flex flex-1 flex-col">
-        <section aria-label="Knowledge AI hero" className="hero-bg relative overflow-hidden">
+        <section aria-label="Knowledge hero" className="hero-bg relative overflow-hidden">
           <div className="relative mx-auto w-full max-w-[1200px] px-4 pt-12 pb-8 text-center sm:px-5 lg:px-8">
             <motion.div {...rise(0.05)} className="flex justify-center">
               <Pill>
@@ -193,7 +195,7 @@ export default function HomePage() {
 
             <motion.div {...rise(0.46)} className="mt-12 border-t border-[#E0E0E0] pt-8">
               <p className="font-display text-md leading-[18.2px] font-normal text-[#666666]">
-                Tenant-isolated teams run on Knowledge AI
+                Tenant-isolated teams run on Knowledge
               </p>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[#999999]">
                 {["ACME", "Globex", "Initech", "Umbrella", "Hooli"].map((logo) => (
@@ -437,11 +439,82 @@ export default function HomePage() {
             <h2 className="font-display mt-4 max-w-lg text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black sm:text-[40px] sm:leading-[44px]">
               Isolated by default, cited by design
             </h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard value="100%" label="of retrieved chunks scoped to your company" tint="#FDE8D8" footer={<span>Isolation</span>} />
-              <StatCard value="5" label="cited sources attached to every answer" tint="#DDEAF6" footer={<span>Citations</span>} />
-              <StatCard value="768-d" label="Gemini embeddings per document chunk" tint="#E8DFF7" footer={<span>Embeddings</span>} />
-              <StatCard value="44px" label="minimum touch targets across the app" tint="#DFF2E0" footer={<span>Accessible</span>} />
+            <div className="mt-8 grid gap-4 sm:mt-12 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Large tile: tenant isolation with retrieval visual */}
+              <article
+                className="group flex min-h-[320px] flex-col rounded-xl bg-[#FDE8D8] p-6 transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] sm:col-span-2 lg:row-span-2"
+              >
+                <p className="font-display text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black">
+                  100%
+                </p>
+                <p className="mt-2 max-w-sm text-sm leading-5 font-normal text-black">
+                  of retrieved chunks scoped to your company
+                </p>
+                <p className="mt-4 max-w-sm text-sm leading-5 font-normal text-black">
+                  Every query is filtered to your company before any
+                  similarity search runs. Documents, chunks, and conversations
+                  never cross tenant boundaries — no tenant ever sees another
+                  tenant’s data.
+                </p>
+                <p className="mt-auto flex items-center justify-between gap-2 pt-6 text-sm leading-5 font-normal text-black">
+                  <span>Isolation</span>
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+                </p>
+              </article>
+              {/* Wide tile: citations with source chips */}
+              <article
+                className="group flex min-h-[190px] flex-col rounded-xl bg-[#DDEAF6] p-6 transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] sm:col-span-2 lg:col-span-2"
+              >
+                <p className="font-display text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black">
+                  5
+                </p>
+                <p className="mt-2 max-w-md text-sm leading-5 font-normal text-black">
+                  cited sources attached to every answer
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {["handbook.pdf", "policy.txt"].map((name) => (
+                    <span
+                      key={name}
+                      className="font-display inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs leading-4 font-medium text-black"
+                    >
+                      <FileText className="h-3 w-3" aria-hidden="true" />
+                      {name}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-auto flex items-center justify-between gap-2 pt-4 text-sm leading-5 font-normal text-black">
+                  <span>Citations</span>
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+                </p>
+              </article>
+              <article
+                className="group flex min-h-[190px] flex-col rounded-xl bg-[#E8DFF7] p-6 transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+              >
+                <p className="font-display text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black">
+                  768-d
+                </p>
+                <p className="mt-2 text-sm leading-5 font-normal text-black">
+                  Gemini embeddings per document chunk
+                </p>
+                <p className="mt-auto flex items-center justify-between gap-2 pt-4 text-sm leading-5 font-normal text-black">
+                  <span>Embeddings</span>
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+                </p>
+              </article>
+              <article
+                className="group flex min-h-[190px] flex-col rounded-xl bg-[#DFF2E0] p-6 transition hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+              >
+                <p className="font-display text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black">
+                  44px
+                </p>
+                <p className="mt-2 text-sm leading-5 font-normal text-black">
+                  minimum touch targets across the app
+                </p>
+                <p className="mt-auto flex items-center justify-between gap-2 pt-4 text-sm leading-5 font-normal text-black">
+                  <span>Accessible</span>
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+                </p>
+              </article>
             </div>
           </div>
         </section>
@@ -452,19 +525,29 @@ export default function HomePage() {
             <h2 className="font-display text-center text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black sm:text-[40px] sm:leading-[44px]">
               Your rollout starts here
             </h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid gap-4 sm:mt-12 sm:grid-cols-2 lg:grid-cols-3">
               {[
-                { title: "Invite your team", body: "Share one code per company. Members land in the right tenant.", tint: "#DFF2E0", icon: <HeartHandshake className="h-10 w-10" aria-hidden="true" /> },
-                { title: "Upload first docs", body: "PDFs and TXTs chunk and embed with live status.", tint: "#DDEAF6", icon: <FileUp className="h-10 w-10" aria-hidden="true" /> },
-                { title: "Ask with sources", body: "Chat cites handbook pages instead of guessing.", tint: "#E8DFF7", icon: <MessageCircleQuestionMark className="h-10 w-10" aria-hidden="true" /> },
+                { step: "Step 1", title: "Invite your team", body: "Share one code per company. Members land in the right tenant.", tint: "#DFF2E0", chip: "#BBF7D0", iconColor: "text-[#15803D]", icon: <HeartHandshake className="h-6 w-6" aria-hidden="true" /> },
+                { step: "Step 2", title: "Upload first docs", body: "PDFs and TXTs chunk and embed with live status.", tint: "#DDEAF6", chip: "#BFDBFE", iconColor: "text-[#1D4ED8]", icon: <FileUp className="h-6 w-6" aria-hidden="true" /> },
+                { step: "Step 3", title: "Ask with sources", body: "Chat cites handbook pages instead of guessing.", tint: "#E8DFF7", chip: "#DDD6FE", iconColor: "text-[#7C3AED]", icon: <MessageCircleQuestionMark className="h-6 w-6" aria-hidden="true" /> },
               ].map((c) => (
-                <article key={c.title} className="group flex flex-col overflow-hidden rounded-xl border border-[#E0E0E0] bg-white transition-shadow duration-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
-                  <div className="dot-grid flex h-32 shrink-0 items-center justify-center text-black/70" style={{ background: c.tint }}>
-                    {c.icon}
+                <article key={c.title} className="group flex min-h-[240px] flex-col overflow-hidden rounded-xl border border-[#E0E0E0] bg-white transition hover:border-[#CCCCCC] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
+                  <div className="dot-grid relative flex h-28 shrink-0 items-center justify-between gap-4 overflow-hidden px-6" style={{ background: c.tint }}>
+                    <span
+                      className={`grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white ${c.iconColor}`}
+                    >
+                      {c.icon}
+                    </span>
+                    <span className="font-display rounded-full bg-white px-3 py-1 text-xs leading-4 font-medium text-[#666666]">
+                      {c.step}
+                    </span>
+                    <span aria-hidden="true" className="pointer-events-none absolute -right-6 -bottom-8 scale-[5] -rotate-12 text-black/15">
+                      {c.icon}
+                    </span>
                   </div>
                   <div className="flex flex-1 flex-col p-6">
-                    <h3 className="font-display text-base font-medium text-black">{c.title}</h3>
-                    <p className="mt-1 flex-1 text-sm leading-5 font-normal text-[#666666]">{c.body}</p>
+                    <h3 className="font-display text-base leading-[22.4px] font-medium tracking-[-0.02em] text-black">{c.title}</h3>
+                    <p className="mt-2 flex-1 text-sm leading-5 font-normal text-[#666666]">{c.body}</p>
                     <button
                       type="button"
                       onClick={() => navigate("/register")}
@@ -538,7 +621,7 @@ export default function HomePage() {
           <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <Box className="h-7 w-7 text-white" aria-hidden="true" />
-              <span className="font-display text-base font-medium text-white">Knowledge AI</span>
+              <span className="font-display text-base font-medium text-white">Knowledge</span>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
@@ -558,7 +641,7 @@ export default function HomePage() {
             </div>
           </div>
           <p className="mt-8 font-display text-xs leading-4 font-normal text-white/40">
-            © 2026 Knowledge AI · Tenant-isolated answers with cited sources
+            © 2026 Knowledge · Tenant-isolated answers with cited sources
           </p>
         </div>
       </footer>

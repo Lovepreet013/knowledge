@@ -40,6 +40,14 @@ class CompanyUserListView(generics.ListAPIView):
         return User.objects.filter(company=user.company)  # type: ignore
 
 
+class AllUserListView(generics.ListAPIView):
+    """Superadmin directory: every user across all tenants, for promotion."""
+
+    serializer_class = UserSerializer
+    permission_classes = [IsSuperAdmin]
+    queryset = User.objects.select_related("company").all().order_by("id")
+
+
 class CompanyUserUpdateView(generics.UpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]  # type: ignore

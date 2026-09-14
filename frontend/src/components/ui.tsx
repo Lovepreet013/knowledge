@@ -56,8 +56,8 @@ export function PageHeader({
   sub,
   actions,
 }: {
-  badge: string;
-  badgeTone?: "warm" | "black";
+  badge?: string;
+  badgeTone?: "warm" | "black" | "brand";
   title: string;
   sub: string;
   actions?: ReactNode;
@@ -65,16 +65,20 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p
-          className={
-            badgeTone === "black"
-              ? "font-display inline-block rounded-lg bg-black px-2 py-0.5 text-sm leading-[18.2px] font-medium text-white"
-              : "font-display inline-block rounded-lg bg-[#FFB3B3] px-2 py-0.5 text-sm leading-[18.2px] font-medium text-black"
-          }
-        >
-          {badge}
-        </p>
-        <h1 className="font-display mt-4 text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black sm:text-[40px] sm:leading-[44px]">
+        {badge !== undefined && badge !== "" && (
+          <p
+            className={
+              badgeTone === "black"
+                ? "font-display inline-block rounded-lg bg-black px-2 py-0.5 text-sm leading-[18.2px] font-medium text-white"
+                : badgeTone === "brand"
+                  ? "font-display inline-block rounded-lg bg-[#EDE9FE] px-2 py-0.5 text-sm leading-[18.2px] font-medium text-[#7C3AED]"
+                  : "font-display inline-block rounded-lg bg-[#FFB3B3] px-2 py-0.5 text-sm leading-[18.2px] font-medium text-black"
+            }
+          >
+            {badge}
+          </p>
+        )}
+        <h1 className={`font-display text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black sm:text-[40px] sm:leading-[44px]${badge ? " mt-4" : ""}`}>
           {title}
         </h1>
         <p className="mt-3 max-w-xl text-lg leading-[25.2px] font-normal text-black">{sub}</p>

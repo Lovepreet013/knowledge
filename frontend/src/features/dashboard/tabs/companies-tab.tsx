@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Building2 } from "lucide-react";
 import { AlertBox, EmptyState, LoadingBlock, PageHeader, SharpButton, inputCls, labelCls } from "../../../components/ui";
 import api from "../../../lib/api";
 
@@ -74,13 +75,13 @@ export default function CompaniesTab() {
 
   return (
     <div className="space-y-5">
-      <PageHeader badge="Superadmin" title="Companies" sub="Create tenants and share invite codes." />
+      <PageHeader title="Companies" sub="Create tenants and share invite codes." />
 
       <form onSubmit={handleCreate} className="rounded-lg border border-[#E0E0E0] bg-white p-6">
         <p className="font-display text-base font-medium tracking-[-0.02em] text-black">
           Create company
         </p>
-        <div className="mt-4 grid gap-2.5 sm:grid-cols-[1fr_1fr_auto]">
+        <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_1fr_auto]">
           <div>
             <label htmlFor="company-name" className={labelCls}>
               Name
@@ -128,48 +129,58 @@ export default function CompaniesTab() {
             key={c.id}
             className="rounded-lg border border-[#E0E0E0] bg-white p-4 transition hover:border-[#CCCCCC]"
           >
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-base font-medium tracking-[-0.02em] text-black">{c.name}</p>
-              <span className="font-display rounded border border-[#E0E0E0] bg-[#F5F5F5] px-2 py-0.5 text-xs font-medium uppercase text-black">
-                {c.slug}
+            <div className="flex gap-4">
+              <span
+                aria-hidden="true"
+                className="mt-1 grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EDE9FE] text-[#7C3AED]"
+              >
+                <Building2 className="h-5 w-5" aria-hidden="true" />
               </span>
-              {confirmDeleteId === c.id ? (
-                <span className="ml-auto inline-flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-normal text-[#666666]">
-                    Delete all users, documents, and chats?
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="truncate text-base font-medium tracking-[-0.02em] text-black">{c.name}</p>
+                  <span className="font-display rounded border border-[#E0E0E0] bg-[#F5F5F5] px-2 py-0.5 text-xs font-medium uppercase text-black">
+                    {c.slug}
                   </span>
-                  <SharpButton variant="danger" size="sm" onClick={() => void handleDeleteCompany(c.id)}>
-                    Confirm
-                  </SharpButton>
-                  <SharpButton variant="secondary" size="sm" onClick={() => setConfirmDeleteId(null)}>
-                    Keep
-                  </SharpButton>
-                </span>
-              ) : (
-                <span className="ml-auto">
-                  <SharpButton
-                    variant="danger"
-                    size="sm"
-                    onClick={() => {
-                      setError("");
-                      setConfirmDeleteId(c.id);
-                    }}
-                  >
-                    Delete
-                  </SharpButton>
-                </span>
-              )}
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-[#F5F5F5] px-3 py-2">
-              <span className="font-display text-xs font-medium text-[#666666]">Invite code</span>
-              <span className="rounded-lg border border-[#E0E0E0] bg-white px-2 py-0.5 text-sm font-medium text-black">
-                {c.invite_code}
-              </span>
-              <span className="ml-auto">
-                <SharpButton variant="secondary" size="sm" onClick={() => void copyInvite(c)}>
-                  {copiedId === c.id ? "Copied" : "Copy"}
-                </SharpButton>
-              </span>
+                  {confirmDeleteId === c.id ? (
+                    <span className="ml-auto inline-flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-normal text-[#666666]">
+                        Delete all users, documents, and chats?
+                      </span>
+                      <SharpButton variant="danger" size="sm" onClick={() => void handleDeleteCompany(c.id)}>
+                        Confirm
+                      </SharpButton>
+                      <SharpButton variant="secondary" size="sm" onClick={() => setConfirmDeleteId(null)}>
+                        Keep
+                      </SharpButton>
+                    </span>
+                  ) : (
+                    <span className="ml-auto">
+                      <SharpButton
+                        variant="danger"
+                        size="sm"
+                        onClick={() => {
+                          setError("");
+                          setConfirmDeleteId(c.id);
+                        }}
+                      >
+                        Delete
+                      </SharpButton>
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-[#F5F5F5] px-3 py-2">
+                  <span className="font-display text-xs font-medium text-[#666666]">Invite code</span>
+                  <span className="rounded-lg border border-[#E0E0E0] bg-white px-2 py-0.5 text-sm font-medium text-black">
+                    {c.invite_code}
+                  </span>
+                  <span className="ml-auto">
+                    <SharpButton variant="secondary" size="sm" onClick={() => void copyInvite(c)}>
+                      {copiedId === c.id ? "Copied" : "Copy"}
+                    </SharpButton>
+                  </span>
+                </div>
+              </div>
             </div>
           </li>
         ))}
