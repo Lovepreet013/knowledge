@@ -49,33 +49,50 @@ def retrieve_relevant_chunks(
 
 def build_prompt(question: str, chunks: list[DocumentChunk]) -> str:
     context = "\n\n".join(
-        f"[Source : {chunk.document.file.name}]\n{chunk.content}" for chunk in chunks
+        f"[Source: {chunk.document.file.name}]\n{chunk.content}"
+        for chunk in chunks
     )
 
     return f"""You are a knowledge assistant answering questions using only the company context below.
 
-        Rules:
-        - Answer only using the provided context.
-        - If the answer isn't supported by the context, say so clearly instead of guessing.
-        - Do not invent facts, numbers, or policies not present in the context.
+    Rules:
+    - Answer only using the provided context.
+    - If the answer isn't supported by the context, say so clearly instead of guessing.
+    - Do not invent facts, numbers, or policies not present in the context.
+    - After your answer, on a new line, write exactly: "SOURCES_USED:" followed by a
+    comma-separated list of ONLY the [Source: ...] filenames you actually drew on to
+    answer. If you used none (e.g. you said the context didn't have the answer),
+    write "SOURCES_USED: none".
 
-        Context:
-        {context}
+    Context:
+    {context}
 
-        Question: {question}
-        """
+    Question: {question}
+    """
 
-
-def generate_answer(question: str, chunks: list[DocumentChunk]) -> str:
+def generate_answer(question: str, chunks: list[DocumentChunk]) -> tuple[str, list[str]]:
     if not chunks:
-        return "I couldn't find this information in the available company documents."
+        return "I couldn't find this information in the available company documents.", []
 
     prompt = build_prompt(question, chunks)
     client = get_client()
 
     response = client.models.generate_content(
         model="gemini-3.6-flash",
-        contents=[prompt],
+        contents=prompt,
     )
 
-    return response.text  # type: ignore
+    raw_text = response.text
+
+    if "SOURCES_USED:" in raw_text:
+        answer_text, sources_line = raw_text.split("SOURCES_USED:", 1)
+        used_filenames = [
+            name.strip() for name in sources_line.split(",")
+            if name.strip() and name.strip().lower() != "none"
+        ]
+    else:
+        # model didn't follow the format — fall back to showing nothing rather than guessing
+        answer_text = raw_text
+        used_filenames = []
+
+    return answer_text.strip(), used_filenames

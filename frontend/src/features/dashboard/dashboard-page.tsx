@@ -81,6 +81,10 @@ export default function DashboardPage() {
   const reduceMotion = useReducedMotion();
   const bottomRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLInputElement>(null);
+  // Marks a freshly created conversation whose messages are managed locally
+  // (optimistic question + server answer). The [activeId] loader must skip it,
+  // or its fetch resolves mid-flight and wipes the question.
+  const skipLoadRef = useRef<number | null>(null);
 
   const canChat = me !== null && me.company !== null;
 
@@ -123,11 +127,15 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (activeId !== null) {
-      loadMessages(activeId);
-    } else {
+    if (activeId === null) {
       setMessages([]);
+      return;
     }
+    if (skipLoadRef.current === activeId) {
+      skipLoadRef.current = null;
+      return;
+    }
+    loadMessages(activeId);
   }, [activeId]);
 
   useEffect(() => {
@@ -219,6 +227,8 @@ export default function DashboardPage() {
     try {
       const res = await api.post("/conversations/", { title: "New chat" });
       await loadConversations();
+      setMessages([]);
+      skipLoadRef.current = res.data.id;
       setActiveId(res.data.id);
       goTab("chat");
       setError("");
@@ -234,6 +244,8 @@ export default function DashboardPage() {
     try {
       const res = await api.post("/conversations/", { title: prompt.slice(0, 60) });
       await loadConversations();
+      setMessages([]);
+      skipLoadRef.current = res.data.id;
       setActiveId(res.data.id);
       setError("");
       setDrawer(false);

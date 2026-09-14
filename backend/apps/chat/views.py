@@ -50,33 +50,31 @@ class MessageListCreateView(generics.ListCreateAPIView):
         return Response(MessageSerializer(messages, many=True).data)
 
     def post(self, request, conversation_id):
-        conversation = self._get_conversation(request, conversation_id)  # type: ignore
+        conversation = self._get_conversation(request, conversation_id)
 
         serializer = SendMessageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        question = serializer.validated_data["content"]  # type: ignore
+        question = serializer.validated_data["content"]
 
-        # save the user's message first
         Message.objects.create(conversation=conversation, role="user", content=question)
 
-        # the actual RAG pipeline
-        chunks = retrieve_relevant_chunks(question, conversation.company_id)  # type: ignore
-        answer = generate_answer(question, chunks)
+        chunks = retrieve_relevant_chunks(question, conversation.company_id)
+        answer_text, used_filenames = generate_answer(question, chunks)
 
-        seen_documents = set()
+        # only include chunks whose document filename was actually cited by the model
         sources = []
+        seen_documents = set()
         for chunk in chunks:
-            if chunk.document_id not in seen_documents:  # type: ignore
-                seen_documents.add(chunk.document_id)  # type: ignore
-                sources.append(
-                    {
-                        "document_id": chunk.document_id,  # type: ignore
-                        "document_name": chunk.document.file.name,
-                    }
-                )
+            filename = chunk.document.file.name
+            if filename in used_filenames and chunk.document_id not in seen_documents:
+                seen_documents.add(chunk.document_id)
+                sources.append({
+                    "document_id": chunk.document_id,
+                    "document_name": filename,
+                })
 
         assistant_message = Message.objects.create(
-            conversation=conversation, role="assistant", content=answer, sources=sources
+            conversation=conversation, role="assistant", content=answer_text, sources=sources
         )
 
         return Response(MessageSerializer(assistant_message).data, status=201)
