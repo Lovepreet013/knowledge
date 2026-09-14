@@ -10,6 +10,7 @@ import {
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
+  Paperclip,
   Search,
   SquarePen,
   UserPlus,
@@ -23,6 +24,7 @@ import UsersTab from "./tabs/users-tab";
 import DocumentsTab from "./tabs/documents-tab";
 import CompaniesTab from "./tabs/companies-tab";
 import PromoteTab from "./tabs/promote-tab";
+import ReactMarkdown from "react-markdown";
 
 interface Me {
   id: number;
@@ -606,68 +608,74 @@ export default function DashboardPage() {
           )}
 
           <div className={activeTab === "chat" ? "flex w-full flex-1 flex-col" : "hidden"}>
-          {me !== null && activeId === null && (
-            <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
-              <h1 className="font-display max-w-xl text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-balance text-black sm:text-[40px] sm:leading-[44px]">
-                Where should we begin?
-              </h1>
-              <p className="mt-3 max-w-md text-base leading-[23.2px] font-normal text-[#666666]">
-                Tenant-isolated answers with cited sources.
-              </p>
-              <div className="mt-6 w-full max-w-2xl">{renderComposer("ask-empty")}</div>
-              <p className="mt-10 max-w-xl text-sm leading-5 font-normal text-[#666666]">
-                Knowledge answers only from your company documents. Verify important information.
-              </p>
-            </div>
-          )}
-
-          {me !== null && activeId !== null && (
-            <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
-              {loadingMsgs ? (
-                <div className="flex flex-1 items-center justify-center" aria-live="polite" aria-busy="true">
-                  <LoadingBlock label="Loading messages…" />
-                </div>
-              ) : (
-                <div className="space-y-3" aria-live="polite">
-                  {messages.map((m) => (
-                    <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                      <div
-                        className={
-                          m.role === "user"
-                            ? "max-w-[80%] rounded-xl rounded-br-sm bg-black px-4 py-3 text-base leading-[22.4px] font-normal text-white"
-                            : "max-w-[80%] rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-3 text-base leading-[22.4px] font-normal text-black"
-                        }
-                      >
-                        <p className="whitespace-pre-wrap">{m.content}</p>
-                        {(m.sources ?? []).length > 0 && (
-                          <p className="mt-2 flex flex-wrap gap-1.5">
-                            {(m.sources ?? []).map((s) => (
-                              <span
-                                key={s.document_id}
-                                className="font-display rounded bg-[#DDEAF6] px-2 py-0.5 text-xs leading-4 font-medium text-black"
-                              >
-                                {s.document_name.split("/").pop()}
-                              </span>
-                            ))}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {sending && (
-                    <div className="inline-block rounded-xl rounded-bl-sm border border-[#E0E0E0] bg-white px-4 py-3">
-                      <ThinkingIndicator label="Thinking" />
-                    </div>
-                  )}
-                  <div ref={bottomRef} />
-                </div>
-              )}
-              {!loadingMsgs && <div aria-hidden="true" className="min-h-6 flex-1" />}
-              <div className="sticky bottom-0 z-10 bg-transparent pt-8 pb-6">
-                {renderComposer("ask-thread")}
+            {me !== null && activeId === null && (
+              <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
+                <h1 className="font-display max-w-xl text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-balance text-black sm:text-[40px] sm:leading-[44px]">
+                  Where should we begin?
+                </h1>
+                <p className="mt-3 max-w-md text-base leading-[23.2px] font-normal text-[#666666]">
+                  Tenant-isolated answers with cited sources.
+                </p>
+                <div className="mt-6 w-full max-w-2xl">{renderComposer("ask-empty")}</div>
+                <p className="mt-10 max-w-xl text-sm leading-5 font-normal text-[#666666]">
+                  Knowledge answers only from your company documents. Verify important information.
+                </p>
               </div>
-            </div>
-          )}
+            )}
+
+            {me !== null && activeId !== null && (
+              <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
+                {loadingMsgs ? (
+                  <div className="flex flex-1 items-center justify-center" aria-live="polite" aria-busy="true">
+                    <LoadingBlock label="Loading messages…" />
+                  </div>
+                ) : (
+                  <div className="space-y-3" aria-live="polite">
+                    {messages.map((m) => (
+                      <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className={
+                            m.role === "user"
+                              ? "max-w-[80%] rounded-xl rounded-br-sm bg-black px-4 py-3 text-base leading-[22.4px] font-normal text-white"
+                              : "max-w-[80%] rounded-xl rounded-bl-sm bg-white px-4 py-3 text-base leading-[22.4px] font-normal text-black"
+                          }
+                        >
+                          <p className="whitespace-pre-wrap">
+                            <ReactMarkdown
+                            >
+                              {m.content}
+                            </ReactMarkdown>
+                          </p>
+                          {(m.sources ?? []).length > 0 && (
+                            <p className="mt-2 flex flex-wrap gap-1.5">
+                              {(m.sources ?? []).map((s) => (
+                                <span
+                                  key={s.document_id}
+                                  className="font-display inline-flex items-center gap-1 rounded bg-[#DDEAF6] px-2 py-0.5 text-xs leading-4 font-medium text-black"
+                                >
+                                  <Paperclip className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                  {s.document_name.split("/").pop()}
+                                </span>
+                              ))}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {sending && (
+                      <div className="inline-block rounded-xl rounded-bl-sm bg-white px-4 py-3">
+                        <ThinkingIndicator label="Thinking" />
+                      </div>
+                    )}
+                    <div ref={bottomRef} />
+                  </div>
+                )}
+                {!loadingMsgs && <div aria-hidden="true" className="min-h-6 flex-1" />}
+                <div className="sticky bottom-0 z-10 bg-transparent pt-8 pb-6">
+                  {renderComposer("ask-thread")}
+                </div>
+              </div>
+            )}
           </div>
           {me !== null && activeTab !== "chat" && (
             <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6">

@@ -63,6 +63,9 @@ def build_prompt(question: str, chunks: list[DocumentChunk]) -> str:
     comma-separated list of ONLY the [Source: ...] filenames you actually drew on to
     answer. If you used none (e.g. you said the context didn't have the answer),
     write "SOURCES_USED: none".
+    - Format your answer using simple Markdown: use **bold** for key terms, bullet
+    points for lists, and short paragraphs. Avoid headers (#) — this will be shown
+    in a compact chat window, not a document.
 
     Context:
     {context}
