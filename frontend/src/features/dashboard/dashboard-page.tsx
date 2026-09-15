@@ -552,7 +552,7 @@ export default function DashboardPage() {
             onClick={() => setDrawer(true)}
             aria-label="Open navigation"
             aria-expanded={drawer}
-            className="pointer-events-auto grid h-11 w-11 cursor-pointer place-items-center rounded-lg bg-white text-black transition hover:bg-[#F5F5F5] lg:hidden"
+            className="pointer-events-auto grid h-11 w-11 cursor-pointer place-items-center rounded-lg border border-[#E0E0E0] bg-white text-black shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:bg-[#F5F5F5] lg:hidden"
           >
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -684,7 +684,7 @@ export default function DashboardPage() {
             )}
           </div>
           {me !== null && activeTab !== "chat" && (
-            <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6">
+            <div className="mx-auto w-full max-w-3xl flex-1 px-4 pt-20 pb-6 sm:px-6">
               {activeTab === "documents" &&
                 (me.company !== null ? (
                   <DocumentsTab canManage={me.role === "company_admin"} />
