@@ -19,7 +19,7 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
 
 
 def retrieve_relevant_chunks(
-    question: str, company_id: int, top_k: int = 5
+    question: str, company_id: int, top_k: int = 12
 ) -> list[DocumentChunk]:
     """
     The core tenant-isolation + retrieval step:
@@ -66,6 +66,11 @@ def build_prompt(question: str, chunks: list[DocumentChunk]) -> str:
     - Format your answer using simple Markdown: use **bold** for key terms, bullet
     points for lists, and short paragraphs. Avoid headers (#) — this will be shown
     in a compact chat window, not a document.
+    - The context may contain excerpts from multiple different documents. If the question
+    spans several documents, use all of them together to give a complete answer, and
+    cite each document you drew from.
+    - If you can answer part of the question but not all of it, answer the part you can
+    and clearly state which part isn't covered by the context.
 
     Context:
     {context}

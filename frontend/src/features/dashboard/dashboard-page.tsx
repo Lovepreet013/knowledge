@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { useReducedMotion } from "framer-motion";
 import {
   ArrowUp,
   Box,
@@ -64,6 +63,15 @@ function readCollapsed(): boolean {
   }
 }
 
+function sortConversationsNewestFirst(list: Conversation[]): Conversation[] {
+  return [...list].sort((a, b) => {
+    const ta = Date.parse(a.created_at);
+    const tb = Date.parse(b.created_at);
+    if (!Number.isNaN(ta) && !Number.isNaN(tb) && ta !== tb) return tb - ta;
+    return b.id - a.id;
+  });
+}
+
 export default function DashboardPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [meError, setMeError] = useState("");
@@ -80,7 +88,6 @@ export default function DashboardPage() {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const reduceMotion = useReducedMotion();
   const bottomRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLInputElement>(null);
   // Marks a freshly created conversation whose messages are managed locally
@@ -100,7 +107,7 @@ export default function DashboardPage() {
   const loadConversations = async () => {
     try {
       const res = await api.get("/conversations/");
-      setConversations(res.data);
+      setConversations(sortConversationsNewestFirst(res.data ?? []));
     } catch {
       setError("Failed to load conversations.");
     } finally {
@@ -139,10 +146,6 @@ export default function DashboardPage() {
     }
     loadMessages(activeId);
   }, [activeId]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
-  }, [messages, sending, reduceMotion]);
 
   useEffect(() => {
     if (!drawer) return;
@@ -299,10 +302,16 @@ export default function DashboardPage() {
   };
 
   const normalizedQuery = query.trim().toLowerCase();
-  const visibleConversations =
+  const visibleConversations = sortConversationsNewestFirst(
     normalizedQuery === ""
       ? conversations
-      : conversations.filter((c) => (c.title || `Conversation ${c.id}`).toLowerCase().includes(normalizedQuery));
+      : conversations.filter((c) => (c.title || `Conversation ${c.id}`).toLowerCase().includes(normalizedQuery)),
+  );
+
+  // Fresh / empty chat (including just-created via "New chat") reuses the
+  // centered welcome layout instead of an empty thread with a bottom composer.
+  const isNewEmptyChat =
+    activeId !== null && !loadingMsgs && !sending && messages.length === 0;
 
   const renderNav = (rail: boolean, onNavigate?: () => void) => (
     <nav aria-label="Workspace" className={rail ? "flex flex-col gap-2" : "flex flex-col gap-1"}>
@@ -608,14 +617,11 @@ export default function DashboardPage() {
           )}
 
           <div className={activeTab === "chat" ? "flex w-full flex-1 flex-col" : "hidden"}>
-            {me !== null && activeId === null && (
+            {me !== null && (activeId === null || isNewEmptyChat) && (
               <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-10 text-center sm:px-6">
                 <h1 className="font-display max-w-xl text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-balance text-black sm:text-[40px] sm:leading-[44px]">
-                  Where should we begin?
+                  {isNewEmptyChat ? <>Let&apos;s discover</> : "Ask any question to get started"}
                 </h1>
-                <p className="mt-3 max-w-md text-base leading-[23.2px] font-normal text-[#666666]">
-                  Tenant-isolated answers with cited sources.
-                </p>
                 <div className="mt-6 w-full max-w-2xl">{renderComposer("ask-empty")}</div>
                 <p className="mt-10 max-w-xl text-sm leading-5 font-normal text-[#666666]">
                   Knowledge answers only from your company documents. Verify important information.
@@ -623,7 +629,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {me !== null && activeId !== null && (
+            {me !== null && activeId !== null && !isNewEmptyChat && (
               <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-1 flex-col px-4 pt-20 pb-0 sm:px-6 lg:pt-22">
                 {loadingMsgs ? (
                   <div className="flex flex-1 items-center justify-center" aria-live="polite" aria-busy="true">

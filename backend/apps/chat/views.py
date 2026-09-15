@@ -17,7 +17,9 @@ class ConversationListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Conversation.objects.filter(user=self.request.user)
+        return Conversation.objects.filter(user=self.request.user).order_by(
+            "-created_at", "-id"
+        )
 
     def perform_create(self, serializer):
         if self.request.user.company is None:  # type: ignore

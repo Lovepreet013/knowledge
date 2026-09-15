@@ -71,7 +71,7 @@ export default function LoginPage() {
           </Link>
           <Link
             to="/"
-            className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-lg border border-black bg-transparent px-4 py-2 text-sm leading-[18.4px] font-normal text-black transition hover:bg-[#F5F5F5]"
+            className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-lg border border-[#E0E0E0] shadow-xs bg-transparent px-4 py-2 text-sm leading-[18.4px] font-normal text-black transition hover:bg-[#F5F5F5]"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Back to home
@@ -82,7 +82,7 @@ export default function LoginPage() {
       <main className="flex flex-1 flex-col">
         <section aria-label="Log in" className="grid flex-1 lg:grid-cols-2">
           <div className="flex w-full flex-col justify-start px-4 py-10 sm:px-5 lg:px-0 lg:py-14 lg:pr-12 lg:pl-[max(2rem,calc((100vw-75rem)/2+2rem))]">
-            <div className="w-full max-w-md">
+            <div className="mx-auto w-full max-w-md lg:mx-0">
               <p className="font-display inline-flex h-7 items-center rounded-full bg-[#EDE9FE] px-3 text-sm leading-[18.2px] font-medium text-[#7C3AED]">
                 Welcome back
               </p>
@@ -206,7 +206,7 @@ export default function LoginPage() {
                 <div className="flex items-center gap-4" aria-hidden="true">
                   <Hairline className="flex-1" />
                   <span className="font-display text-xs leading-4 font-medium tracking-[0.12em] text-[#666666]">
-                    OR CONTINUE WITH
+                    OR
                   </span>
                   <Hairline className="flex-1" />
                 </div>

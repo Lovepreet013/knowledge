@@ -44,7 +44,7 @@ export default function ProtectedRoute(props: ProtectedRouteProps) {
     });
   }, [token, mustCheckUser]);
 
-  // Rule 1: must be logged in.
+  // must be logged in.
   if (!token) {
     return <Navigate to="/" replace />;
   }
@@ -58,7 +58,7 @@ export default function ProtectedRoute(props: ProtectedRouteProps) {
     );
   }
 
-  // Rule 2: if this route requires specific roles, check the user's role.
+  // if this route requires specific roles, check the user's role.
   if (allowedRoles !== undefined && me !== null) {
     const roleIsAllowed = allowedRoles.includes(me.role);
     if (!roleIsAllowed) {
@@ -66,7 +66,7 @@ export default function ProtectedRoute(props: ProtectedRouteProps) {
     }
   }
 
-  // Rule 3: if this route requires a company, check the user has one.
+  // if this route requires a company, check the user has one.
   if (requireCompany === true && me !== null) {
     const hasCompany = me.company !== null;
     if (!hasCompany) {
