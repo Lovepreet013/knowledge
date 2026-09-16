@@ -17,6 +17,7 @@ import {
   StatusBadge,
 } from "../../../components/ui";
 import api from "../../../lib/api";
+import { baseName, fileUrl, firstApiError, formatDate } from "../../../lib/utils";
 
 interface Document {
   id: number;
@@ -29,39 +30,6 @@ interface Document {
 
 type FileFilter = "all" | "pdf" | "txt";
 type SortKey = "newest" | "oldest" | "name";
-
-function baseName(path: string): string {
-  return path.split("/").pop() ?? path;
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-function fileUrl(raw: string): string {
-  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-  const base = (api.defaults.baseURL ?? "http://localhost:8000/api").replace(
-    /\/api\/?$/,
-    "",
-  );
-  return `${base}${raw.startsWith("/") ? raw : `/${raw}`}`;
-}
-
-function firstApiError(err: unknown, fallback: string): string {
-  const data = (err as { response?: { data?: unknown } }).response?.data as
-    | Record<string, string[]>
-    | undefined;
-  const first = data ? (Object.values(data)[0] as string[])?.[0] : null;
-  return first || fallback;
-}
 
 export default function DocumentsTab({ canManage }: { canManage: boolean }) {
   const [documents, setDocuments] = useState<Document[]>([]);

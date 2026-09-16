@@ -19,6 +19,7 @@ import {
 import AppShell from "../../components/app-shell";
 import { AlertBox, Hairline, LoadingBlock, ThinkingIndicator } from "../../components/ui";
 import api from "../../lib/api";
+import { firstApiError } from "../../lib/utils";
 import UsersTab from "./tabs/users-tab";
 import DocumentsTab from "./tabs/documents-tab";
 import CompaniesTab from "./tabs/companies-tab";
@@ -75,19 +76,6 @@ function sortConversationsNewestFirst(list: Conversation[]): Conversation[] {
 
 const ATTACHMENT_EXTENSIONS = ["pdf", "txt", "png", "jpg", "jpeg"];
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
-
-function firstApiError(err: unknown, fallback: string): string {
-  const data = (err as { response?: { data?: unknown } }).response?.data as
-    | Record<string, unknown>
-    | undefined;
-  if (!data || typeof data !== "object") return fallback;
-  if (typeof data.detail === "string") return data.detail;
-  for (const value of Object.values(data)) {
-    if (typeof value === "string") return value;
-    if (Array.isArray(value) && typeof value[0] === "string") return value[0];
-  }
-  return fallback;
-}
 
 export default function DashboardPage() {
   const [me, setMe] = useState<Me | null>(null);
