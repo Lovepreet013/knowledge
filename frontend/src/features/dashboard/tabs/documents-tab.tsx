@@ -266,12 +266,15 @@ export default function DocumentsTab({ canManage }: { canManage: boolean }) {
             />
           </div>
           <div className="flex shrink-0 items-center gap-4">
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
+              <label htmlFor="doc-sort" className="sr-only">
+                Sort documents
+              </label>
               <select
                 id="doc-sort"
                 value={sortKey}
                 onChange={(e) => setSortKey(e.target.value as SortKey)}
-                className="min-h-[44px] cursor-pointer appearance-none rounded-lg border border-[#CCCCCC] bg-white pr-10 pl-4 text-base leading-[23.2px] font-normal text-black transition hover:border-[#999999] focus:border-black focus:shadow-none focus:outline-none"
+                className="min-h-[44px] w-full cursor-pointer appearance-none rounded-lg border border-[#CCCCCC] bg-white pr-10 pl-4 text-base leading-[23.2px] font-normal text-black transition hover:border-[#999999] focus:border-black focus:shadow-none focus:outline-none sm:w-auto"
               >
                 <option value="newest">Newest first</option>
                 <option value="oldest">Oldest first</option>

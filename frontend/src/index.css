@@ -28,10 +28,12 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
@@ -72,6 +74,24 @@ body {
   font-family: var(--font-display);
 }
 
+/* "Upload once, ask anything" step preview: rise + fade on step change.
+   The card remounts via key={activeStep}, so this mount animation runs
+   on every step click — no rAF/paint-flush timing involved. */
+@keyframes preview-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.preview-enter {
+  animation: preview-rise 350ms ease-out;
+}
+
 ::selection {
   background: #000000;
   color: #ffffff;
@@ -100,7 +120,10 @@ select:focus {
   html {
     scroll-behavior: auto;
   }
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
