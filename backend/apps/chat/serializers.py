@@ -16,3 +16,4 @@ class ConversationSerializer(serializers.ModelSerializer):
 
 class SendMessageSerializer(serializers.Serializer):
     content = serializers.CharField()
+    file = serializers.FileField(required=False)

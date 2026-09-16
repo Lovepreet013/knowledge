@@ -8,7 +8,13 @@ from .serializers import (
     MessageSerializer,
     SendMessageSerializer,
 )
-from .rag import retrieve_relevant_chunks, generate_answer
+from .rag import (
+    ATTACHMENT_SUFFIX,
+    build_attachment_context,
+    retrieve_relevant_chunks,
+    generate_answer,
+)
+from .attachments import process_upload
 
 
 # Create your views here.
@@ -57,11 +63,32 @@ class MessageListCreateView(generics.ListCreateAPIView):
         serializer = SendMessageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         question = serializer.validated_data["content"]
+        upload = serializer.validated_data.get("file")
+
+        # Ephemeral attachment (MVP): validated + extracted in RAM per
+        # question, discarded with the request. Only the filename survives,
+        # inside the assistant message's sources.
+        attachment_name = None
+        attachment_text = ""
+        image_data = None
+        if upload is not None:
+            attachment_name, extracted, image_bytes, mime = process_upload(upload)
+            if image_bytes is not None:
+                image_data = (image_bytes, mime or "image/jpeg")
+            else:
+                attachment_text = build_attachment_context(
+                    attachment_name, extracted, question
+                )
 
         Message.objects.create(conversation=conversation, role="user", content=question)
 
         chunks = retrieve_relevant_chunks(question, conversation.company_id)
-        answer_text, used_filenames = generate_answer(question, chunks)
+        answer_text, used_filenames = generate_answer(
+            question,
+            chunks,
+            attachment=(attachment_name, attachment_text) if attachment_name else None,
+            image_data=image_data,
+        )
 
         # only include chunks whose document filename was actually cited by the model
         sources = []
@@ -73,7 +100,14 @@ class MessageListCreateView(generics.ListCreateAPIView):
                 sources.append({
                     "document_id": chunk.document_id,
                     "document_name": filename,
+                    "origin": "company",
                 })
+        if attachment_name and f"{attachment_name}{ATTACHMENT_SUFFIX}" in used_filenames:
+            sources.append({
+                "document_id": None,
+                "document_name": attachment_name,
+                "origin": "attachment",
+            })
 
         assistant_message = Message.objects.create(
             conversation=conversation, role="assistant", content=answer_text, sources=sources

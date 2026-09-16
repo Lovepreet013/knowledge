@@ -41,8 +41,9 @@ interface Conversation {
 }
 
 interface Source {
-  document_id: number;
+  document_id: number | null;
   document_name: string;
+  origin?: "company" | "attachment";
 }
 
 interface Message {
@@ -72,6 +73,22 @@ function sortConversationsNewestFirst(list: Conversation[]): Conversation[] {
   });
 }
 
+const ATTACHMENT_EXTENSIONS = ["pdf", "txt", "png", "jpg", "jpeg"];
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+
+function firstApiError(err: unknown, fallback: string): string {
+  const data = (err as { response?: { data?: unknown } }).response?.data as
+    | Record<string, unknown>
+    | undefined;
+  if (!data || typeof data !== "object") return fallback;
+  if (typeof data.detail === "string") return data.detail;
+  for (const value of Object.values(data)) {
+    if (typeof value === "string") return value;
+    if (Array.isArray(value) && typeof value[0] === "string") return value[0];
+  }
+  return fallback;
+}
+
 export default function DashboardPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [meError, setMeError] = useState("");
@@ -83,6 +100,7 @@ export default function DashboardPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [drawer, setDrawer] = useState(false);
   const [query, setQuery] = useState("");
@@ -90,6 +108,7 @@ export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const bottomRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // Marks a freshly created conversation whose messages are managed locally
   // (optimistic question + server answer). The [activeId] loader must skip it,
   // or its fetch resolves mid-flight and wipes the question.
@@ -172,7 +191,7 @@ export default function DashboardPage() {
     });
   };
 
-  const postMessage = async (text: string, conversationId: number) => {
+  const postMessage = async (text: string, conversationId: number, file: File | null) => {
     const trimmed = text.trim();
     if (trimmed === "" || sending) return;
     setError("");
@@ -186,9 +205,17 @@ export default function DashboardPage() {
     };
     setMessages((prev) => [...prev, userMessage]);
     try {
-      const res = await api.post(`/conversations/${conversationId}/messages/`, {
-        content: trimmed,
-      });
+      let res;
+      if (file) {
+        const formData = new FormData();
+        formData.append("content", trimmed);
+        formData.append("file", file);
+        res = await api.post(`/conversations/${conversationId}/messages/`, formData);
+      } else {
+        res = await api.post(`/conversations/${conversationId}/messages/`, {
+          content: trimmed,
+        });
+      }
       const assistantMessage: Message = {
         ...res.data,
         sources: res.data.sources ?? [],
@@ -209,22 +236,41 @@ export default function DashboardPage() {
           /* non-fatal — chat works, keeps the placeholder name */
         }
       }
-    } catch {
-      setError("Failed to get a response. Please try again.");
+    } catch (err: unknown) {
+      setError(firstApiError(err, "Failed to get a response. Please try again."));
     } finally {
       setSending(false);
     }
+  };
+
+  const handleAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (!file) return;
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!ATTACHMENT_EXTENSIONS.includes(extension)) {
+      setError("Only PDF, TXT, PNG and JPG files can be attached.");
+      return;
+    }
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      setError("Attached files must be 10MB or smaller.");
+      return;
+    }
+    setError("");
+    setAttachment(file);
   };
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || sending || !canChat) return;
     const text = input;
+    const file = attachment;
     setInput("");
+    setAttachment(null);
     if (activeId === null) {
-      void startSuggested(text);
+      void startSuggested(text, file);
     } else {
-      void postMessage(text, activeId);
+      void postMessage(text, activeId, file);
     }
   };
 
@@ -244,7 +290,7 @@ export default function DashboardPage() {
     }
   };
 
-  const startSuggested = async (prompt: string) => {
+  const startSuggested = async (prompt: string, file: File | null = null) => {
     if (sending) return;
     try {
       const res = await api.post("/conversations/", { title: prompt.slice(0, 60) });
@@ -254,7 +300,7 @@ export default function DashboardPage() {
       setActiveId(res.data.id);
       setError("");
       setDrawer(false);
-      await postMessage(prompt, res.data.id);
+      await postMessage(prompt, res.data.id, file);
     } catch {
       setError("Failed to start a conversation.");
     }
@@ -516,10 +562,46 @@ export default function DashboardPage() {
 
   const renderComposer = (id: string) => (
     <form onSubmit={handleSend} className="w-full" aria-label="Ask your documents">
-      <div className="flex min-h-[56px] w-full items-center gap-2 rounded-full border border-[#E0E0E0] bg-white py-2 pr-2 pl-5 shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+      {attachment && (
+        <div className="mb-2 flex justify-start">
+          <span className="font-display inline-flex max-w-full items-center gap-2 rounded-full border border-[#E0E0E0] bg-white py-1 pr-1 pl-3 text-sm leading-[18.2px] font-medium text-black shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+            <Paperclip className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="max-w-48 truncate">{attachment.name}</span>
+            <button
+              type="button"
+              onClick={() => setAttachment(null)}
+              disabled={sending}
+              aria-label={`Remove ${attachment.name}`}
+              className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-full text-[#666666] transition hover:bg-[#F5F5F5] hover:text-black disabled:cursor-not-allowed"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </span>
+        </div>
+      )}
+      <div className="flex min-h-[56px] w-full items-center gap-2 rounded-full border border-[#E0E0E0] bg-white py-2 pr-2 pl-2 shadow-[0_4px_12px_rgba(0,0,0,0.06)] sm:pl-5">
         <label htmlFor={id} className="sr-only">
           Ask about your company documents
         </label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.txt,.png,.jpg,.jpeg"
+          onChange={handleAttach}
+          disabled={sending || !canChat}
+          aria-label="Attach a file"
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={sending || !canChat}
+          aria-label="Attach a file"
+          title="Attach a file"
+          className="grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-full text-black transition hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:text-[#CCCCCC] disabled:hover:bg-transparent"
+        >
+          <Paperclip className="h-5 w-5" aria-hidden="true" />
+        </button>
         <input
           ref={composerRef}
           id={id}
@@ -654,10 +736,11 @@ export default function DashboardPage() {
                           </p>
                           {(m.sources ?? []).length > 0 && (
                             <p className="mt-2 flex flex-wrap gap-1.5">
-                              {(m.sources ?? []).map((s) => (
+                              {(m.sources ?? []).map((s, i) => (
                                 <span
-                                  key={s.document_id}
-                                  className="font-display inline-flex items-center gap-1 rounded bg-[#DDEAF6] px-2 py-0.5 text-xs leading-4 font-medium text-black"
+                                  key={s.document_id ?? `${s.document_name}-${i}`}
+                                  title={s.origin === "attachment" ? "Attached file" : undefined}
+                                  className={`font-display inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs leading-4 font-medium text-black ${s.origin === "attachment" ? "bg-[#E8DFF7]" : "bg-[#DDEAF6]"}`}
                                 >
                                   <Paperclip className="h-3 w-3 shrink-0" aria-hidden="true" />
                                   {s.document_name.split("/").pop()}

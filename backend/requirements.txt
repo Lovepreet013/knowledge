@@ -1,0 +1,13 @@
+﻿# Direct dependencies only (verified by import scan of apps/ + config/).
+# Transitive packages (anyio, httpx, pydantic, etc.) are pulled in
+# automatically by pip and intentionally left out of this file.
+Django==6.1.1
+django-cors-headers==4.9.0 # CORS middleware for the Vite dev origin
+djangorestframework==3.18.0
+djangorestframework-simplejwt==5.5.1 # JWT login/refresh + /auth/me/
+google-genai==2.22.0 # Gemini embeddings + RAG generation
+numpy==2.5.3 # cosine similarity in chat/rag.py
+pillow==12.3.0 # chat image-attachment validation + downscaling
+psycopg-binary==3.3.5 # PostgreSQL driver (no compiler needed)
+pypdf==6.17.0 # PDF text extraction in documents/parsers.py
+python-dotenv==1.2.3 # loads backend/.env in settings.py
