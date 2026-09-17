@@ -61,6 +61,12 @@ export default function DashboardPage() {
   // (optimistic question + server answer). The [activeId] loader must skip it,
   // or its fetch resolves mid-flight and wipes the question.
   const skipLoadRef = useRef<number | null>(null);
+  // Navigation-only scroll signals (asking a question never scrolls):
+  // - scrollAfterLoadRef is set only by loadMessages, which runs solely when
+  //   a conversation is opened — sends never touch it.
+  // - prevTabRef detects returning to the chat tab with an open conversation.
+  const scrollAfterLoadRef = useRef(false);
+  const prevTabRef = useRef<string>("chat");
   // Object URLs minted for optimistic image previews. Revoked whenever the
   // messages holding them are discarded (never on append), plus on unmount.
   const previewUrlsRef = useRef<string[]>([]);
@@ -104,6 +110,9 @@ export default function DashboardPage() {
         sources: m.sources ?? [],
       }));
       setMessages(normalized);
+      // Navigation-only signal for the scroll effect below: a completed load
+      // means the user opened a conversation. Sends never set this flag.
+      scrollAfterLoadRef.current = true;
     } catch {
       setError("Failed to load messages.");
     } finally {
@@ -288,6 +297,13 @@ export default function DashboardPage() {
   };
 
   const pickConversation = (id: number) => {
+    if (id === activeId) {
+      // Re-clicking the already-open chat jumps to its latest message.
+      // (A different id flows through loadMessages → scrollAfterLoadRef.)
+      requestAnimationFrame(() => {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+      });
+    }
     setActiveId(id);
     goTab("chat");
     setDrawer(false);
@@ -328,6 +344,42 @@ export default function DashboardPage() {
   // centered welcome layout instead of an empty thread with a bottom composer.
   const isNewEmptyChat =
     activeId !== null && !loadingMsgs && !sending && messages.length === 0;
+
+  // Tab switches away from chat always start at top. The window is the
+  // scroller (tab bodies just toggle hidden divs), so without this the
+  // previous tab's scrollY is preserved.
+  useEffect(() => {
+    if (activeTab !== "chat") {
+      window.scrollTo(0, 0);
+    }
+  }, [activeTab]);
+
+  // Chat scrolling is navigation-only: opening a chat (or returning to the
+  // chat tab) pins to the absolute bottom — last AI response + composer.
+  // Asking a question never scrolls; the view stays where the user left it.
+  // loadMessages is the only writer of scrollAfterLoadRef and runs solely on
+  // conversation open, so newly asked messages can't trigger a scroll. rAF
+  // waits for the thread to paint. Instant (CSS scroll-behavior: auto).
+  useEffect(() => {
+    if (activeTab !== "chat") {
+      prevTabRef.current = activeTab;
+      return;
+    }
+    const returnedToChat = prevTabRef.current !== "chat";
+    prevTabRef.current = "chat";
+    if (activeId === null || isNewEmptyChat) {
+      window.scrollTo(0, 0);
+      return;
+    }
+    if (loadingMsgs) return;
+    if (scrollAfterLoadRef.current || returnedToChat) {
+      scrollAfterLoadRef.current = false;
+      const frame = requestAnimationFrame(() => {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [activeTab, activeId, isNewEmptyChat, loadingMsgs]);
 
   // ── Sidebar props ──
 

@@ -10,11 +10,17 @@ from .serializers import (
 )
 from .rag import (
     ATTACHMENT_SUFFIX,
+    MAX_HISTORY_IMAGES,
+    MAX_HISTORY_TEXT_ATTACHMENTS,
     build_attachment_context,
     retrieve_relevant_chunks,
     generate_answer,
 )
-from .attachments import process_upload
+from .attachments import (
+    build_thumbnail_file,
+    load_stored_image_for_gemini,
+    process_upload,
+)
 
 
 # Create your views here.
@@ -49,6 +55,41 @@ class ConversationDetailView(generics.UpdateAPIView):
         )
 
 
+def _question_refers_to_history(question: str) -> bool:
+    """True when a question with a new upload explicitly wants older files.
+
+    "Explain the image" with a fresh upload must answer the CURRENT file
+    only. History is included with a new upload only for explicit signals
+    like previous/earlier/compare/both/all, otherwise it drowns the current
+    file and reproduces the reported bug.
+    """
+    q = (question or "").lower()
+    markers = (
+        "previous",
+        "previously",
+        "earlier",
+        "prior",
+        "first image",
+        "first file",
+        "last image",
+        "last file",
+        "other image",
+        "other file",
+        "another image",
+        "another file",
+        "both image",
+        "both file",
+        "both of",
+        "all image",
+        "all file",
+        "compare",
+        "comparison",
+        "combined",
+        "together",
+    )
+    return any(m in q for m in markers)
+
+
 class MessageListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -65,29 +106,137 @@ class MessageListCreateView(generics.ListCreateAPIView):
         question = serializer.validated_data["content"]
         upload = serializer.validated_data.get("file")
 
-        # Ephemeral attachment (MVP): validated + extracted in RAM per
-        # question, discarded with the request. Only the filename survives,
-        # inside the assistant message's sources.
-        attachment_name = None
-        attachment_text = ""
-        image_data = None
+        # Persistent attachment: validated in RAM, then stored on the user
+        # Message (`attachment` + little `attachment_thumbnail` for images)
+        # so the bubble keeps its thumbnail/file pill on reload. The stored
+        # text/image is also reused for follow-up questions below.
+        current_name: str | None = None
+        current_ranked_text = ""
+        current_image: tuple[bytes, str] | None = None
+        user_message = Message(
+            conversation=conversation, role="user", content=question
+        )
         if upload is not None:
-            attachment_name, extracted, image_bytes, mime = process_upload(upload)
-            if image_bytes is not None:
-                image_data = (image_bytes, mime or "image/jpeg")
-            else:
-                attachment_text = build_attachment_context(
-                    attachment_name, extracted, question
+            current_name, kind, extracted, image_bytes, mime = process_upload(
+                upload
+            )
+            user_message.attachment_name = current_name
+            user_message.attachment_kind = kind
+            if kind in ("pdf", "txt"):
+                # Keep the full extraction for future questions; rank a
+                # snippet for this question's prompt.
+                user_message.attachment_text = extracted
+                current_ranked_text = build_attachment_context(
+                    current_name, extracted, question
                 )
+            else:
+                user_message.attachment_text = ""
+                current_ranked_text = ""
+                current_image = (image_bytes, mime or "image/jpeg")  # type: ignore
+            # Save first so FileFields have an instance, then store files.
+            user_message.save()
+            try:
+                upload.seek(0)
+            except Exception:
+                pass
+            user_message.attachment.save(current_name, upload, save=True)
+            if current_image is not None:
+                try:
+                    thumb_file = build_thumbnail_file(
+                        current_name, current_image[0]
+                    )
+                    user_message.attachment_thumbnail.save(
+                        thumb_file.name, thumb_file, save=True
+                    )
+                except Exception:
+                    # Thumbnail is display-only: keep the original file and
+                    # continue rather than failing the question.
+                    pass
+        else:
+            user_message.save()
 
-        Message.objects.create(conversation=conversation, role="user", content=question)
+        # Follow-up reuse: prior attachments stay in context ONLY when
+        # needed. Pure follow-ups (no new upload) reuse history as before.
+        # With a new upload, default to CURRENT-only so "Explain the image"
+        # explains the just-uploaded file; include history only when the
+        # question explicitly refers to previous/earlier/compare/both/all.
+        # Tenant isolation holds because the queryset is scoped to this
+        # conversation (already scoped to user + company).
+        history_attachments: list[tuple[str, str]] = []
+        history_images: list[tuple[bytes, str]] = []
+        include_history = (current_name is None) or _question_refers_to_history(
+            question
+        )
+        if include_history:
+            try:
+                prior = list(
+                    Message.objects.filter(
+                        conversation=conversation, role="user"
+                    )
+                    .exclude(id=user_message.id)
+                    .exclude(attachment__isnull=True)
+                    .exclude(attachment="")
+                    .order_by("-created_at", "-id")[:10]
+                )
+            except Exception:
+                prior = []
+            prior.reverse()  # chronological: history first, current last
+            text_count = 0
+            image_count = 0
+            for msg in prior:
+                name = (msg.attachment_name or "").strip()
+                if not name:
+                    continue
+                kind = (msg.attachment_kind or "").strip()
+                if kind == "image":
+                    if image_count >= MAX_HISTORY_IMAGES:
+                        continue
+                    try:
+                        loaded = (
+                            load_stored_image_for_gemini(msg.attachment)
+                            if msg.attachment
+                            else None
+                        )
+                    except Exception:
+                        loaded = None
+                    if loaded is None:
+                        continue
+                    history_images.append(loaded)
+                    history_attachments.append((name, ""))
+                    image_count += 1
+                elif kind in ("pdf", "txt"):
+                    if text_count >= MAX_HISTORY_TEXT_ATTACHMENTS:
+                        continue
+                    stored_text = msg.attachment_text or ""
+                    if not stored_text.strip():
+                        continue
+                    try:
+                        ranked = build_attachment_context(name, stored_text, question)
+                    except Exception:
+                        continue
+                    if not ranked.strip():
+                        continue
+                    history_attachments.append((name, ranked))
+                    text_count += 1
+                # unknown kinds are ignored (forward-compatible)
+
+        current_attachments: list[tuple[str, str]] = (
+            [(current_name, current_ranked_text)] if current_name else []
+        )
+        current_images: list[tuple[bytes, str]] = (
+            [current_image] if current_image is not None else []
+        )
+        all_attachments = history_attachments + current_attachments
+        all_images = history_images + current_images
+        current_names = {current_name} if current_name else None
 
         chunks = retrieve_relevant_chunks(question, conversation.company_id)
         answer_text, used_filenames = generate_answer(
             question,
             chunks,
-            attachment=(attachment_name, attachment_text) if attachment_name else None,
-            image_data=image_data,
+            attachments=all_attachments or None,
+            images=all_images or None,
+            current_names=current_names,
         )
 
         # only include chunks whose document filename was actually cited by the model
@@ -102,12 +251,17 @@ class MessageListCreateView(generics.ListCreateAPIView):
                     "document_name": filename,
                     "origin": "company",
                 })
-        if attachment_name and f"{attachment_name}{ATTACHMENT_SUFFIX}" in used_filenames:
-            sources.append({
-                "document_id": None,
-                "document_name": attachment_name,
-                "origin": "attachment",
-            })
+        seen_attachment_names: set[str] = set()
+        for name, _text in all_attachments:
+            if not name or name in seen_attachment_names:
+                continue
+            seen_attachment_names.add(name)
+            if f"{name}{ATTACHMENT_SUFFIX}" in used_filenames:
+                sources.append({
+                    "document_id": None,
+                    "document_name": name,
+                    "origin": "attachment",
+                })
 
         assistant_message = Message.objects.create(
             conversation=conversation, role="assistant", content=answer_text, sources=sources

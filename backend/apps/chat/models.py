@@ -29,6 +29,23 @@ class Message(models.Model):
     sources = models.JSONField(
         default=list, blank=True
     )  # Store sources as a JSON array
+    # Persistent per-message attachment (replaces the old ephemeral-only flow).
+    # The original upload is kept on disk so the chat bubble can show a
+    # thumbnail / file pill on reload, and follow-up questions in the same
+    # conversation can reuse it. Only user messages carry attachments.
+    attachment = models.FileField(
+        upload_to="chat_attachments/%Y/%m", null=True, blank=True
+    )
+    attachment_thumbnail = models.ImageField(
+        upload_to="chat_attachments/thumbs/%Y/%m", null=True, blank=True
+    )  # small JPEG for images only — the "little thumbnail" shown in chat
+    attachment_name = models.CharField(max_length=255, blank=True, default="")
+    attachment_kind = models.CharField(
+        max_length=10, blank=True, default=""
+    )  # 'image' | 'pdf' | 'txt'
+    attachment_text = models.TextField(
+        blank=True, default=""
+    )  # extracted text for pdf/txt, reused by follow-up questions
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

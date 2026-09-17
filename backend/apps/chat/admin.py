@@ -5,7 +5,16 @@ from .models import Conversation, Message
 class MessageInline(admin.TabularInline):
     model = Message
     extra = 0
-    readonly_fields = ["role", "content", "sources", "created_at"]
+    readonly_fields = [
+        "role",
+        "content",
+        "sources",
+        "attachment",
+        "attachment_thumbnail",
+        "attachment_name",
+        "attachment_kind",
+        "created_at",
+    ]
     can_delete = False
 
 
@@ -22,7 +31,15 @@ class MessageAdmin(admin.ModelAdmin):
     list_display_links = ["id", "short_content"]
     list_filter = ["role", "conversation__company"]
     search_fields = ["content"]
-    readonly_fields = ["sources", "created_at"]
+    readonly_fields = [
+        "sources",
+        "attachment",
+        "attachment_thumbnail",
+        "attachment_name",
+        "attachment_kind",
+        "attachment_text",
+        "created_at",
+    ]
 
     def short_content(self, obj):
         return obj.content[:60] + "..." if len(obj.content) > 60 else obj.content

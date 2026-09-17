@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from "react-router";
+import { Navigate, Route, Routes, useLocation } from "react-router";
+import { useEffect } from "react";
 import LoginPage from "./features/auth/login-page";
 import DashboardPage from "./features/dashboard/dashboard-page";
 import RegisterPage from "./features/auth/register-page";
@@ -6,10 +7,24 @@ import ProtectedRoute from "./components/protected-routes";
 import { MeProvider } from "./components/me-provider";
 import HomePage from "./components/home-page";
 
+// SPA routes preserve window.scrollY by default (no full reload), so reset
+// on every pathname change. /dashboard owns its own scrolling (tabs go top,
+// open chats go bottom) to avoid this top-reset overriding the chat bottom.
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (pathname !== "/dashboard") {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname]);
+  return null;
+}
+
 
 function App() {
   return (
     <MeProvider>
+    <ScrollToTop />
     <Routes>
       <Route path='/' element={<HomePage/>}/>
       <Route path='/login' element={<LoginPage/>}/>

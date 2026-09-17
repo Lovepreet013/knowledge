@@ -25,9 +25,17 @@ export interface Message {
   content: string;
   sources?: Source[];
   created_at: string;
-  // Client-only: ephemeral upload preview for the optimistic user bubble.
-  // Never comes from the backend (attachments aren't stored); lost on reload,
-  // where the assistant's source pill remains the persisted record.
+  // Persisted attachment (backend MEDIA_ROOT): the little thumbnail / file
+  // pill that remains on reload + is reused for follow-up questions.
+  // `attachment` / `attachment_thumbnail` are relative URLs (e.g.
+  // "/media/chat_attachments/2026/09/report.pdf"); resolve via fileUrl().
+  attachment?: string | null;
+  attachment_thumbnail?: string | null;
+  attachment_name?: string;
+  attachment_kind?: string;
+  // Client-only: optimistic upload preview for the just-sent user bubble.
+  // Shown immediately via blob URL; on reload the persisted fields above
+  // take over (preview is never returned by the backend).
   attachmentPreview?: {
     name: string;
     url?: string;
