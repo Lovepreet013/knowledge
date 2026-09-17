@@ -52,15 +52,15 @@ export default function AppShell({
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             aria-label="Account menu"
-            className="pointer-events-auto inline-flex min-h-[40px] cursor-pointer items-center gap-2 rounded-full border border-[#E0E0E0] bg-white py-1 pr-3 pl-1 text-black shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:bg-[#F5F5F5]"
+            className="pointer-events-auto inline-flex min-h-[40px] cursor-pointer items-center gap-2 rounded-full border border-[#E0E0E0] bg-white py-1 pr-3 pl-1 text-black shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:bg-[#E8E8E8]"
           >
             <span
               aria-hidden="true"
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-black font-display text-xs font-medium text-white"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-black font-display text-xs font-medium text-white"
             >
               {initial}
             </span>
-            <span className="max-w-32 truncate font-display text-base font-medium text-black">
+            <span className="max-w-32 truncate font-display text-sm font-medium text-black">
               {me.username}
             </span>
             <ChevronDown
@@ -85,12 +85,12 @@ export default function AppShell({
                 <div className="flex items-center gap-3 px-4 pt-1 pb-3">
                   <span
                     aria-hidden="true"
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-black font-display text-base font-medium text-white"
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black font-display text-sm font-medium text-white"
                   >
                     {initial}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-base font-medium text-black">
+                    <p className="truncate font-display text-sm font-medium text-black">
                       {me.username}
                     </p>
                     <p className="truncate text-sm leading-5 font-normal text-[#666666]">
@@ -107,18 +107,18 @@ export default function AppShell({
                     type="button"
                     role="menuitem"
                     onClick={closeMenu}
-                    className="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-left text-base leading-[23.2px] font-normal text-black transition hover:bg-[#F5F5F5]"
+                    className="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-left text-sm leading-5 font-normal text-black transition hover:bg-[#E8E8E8]"
                   >
-                    <User className="h-6 w-6 shrink-0" aria-hidden="true" />
+                    <User className="h-5 w-5 shrink-0" aria-hidden="true" />
                     <span>Profile</span>
                   </button>
                   <button
                     type="button"
                     role="menuitem"
                     onClick={logout}
-                    className="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-left text-base leading-[23.2px] font-normal text-black transition hover:bg-[#F5F5F5]"
+                    className="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-left text-sm leading-5 font-normal text-black transition hover:bg-[#E8E8E8]"
                   >
-                    <LogOut className="h-6 w-6 shrink-0" aria-hidden="true" />
+                    <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
                     <span>Logout</span>
                   </button>
                 </div>

@@ -77,34 +77,35 @@ def build_prompt(question: str, chunks: list[DocumentChunk], attachment_name: st
         sections.append(f"Company context:\n{company_context}")
     context = "\n\n".join(sections)
 
-    return f"""You are a knowledge assistant answering questions using only the company context below.
-
-    Rules:
-    - Answer only using the provided context.
-    - The attached file (if any) is the PRIMARY source: prefer it when the
-      question is about it, and fall back to the company context otherwise.
-    - If the answer isn't supported by the context, say so clearly instead of guessing.
-    - Do not invent facts, numbers, or policies not present in the context.
-    - After your answer, on a new line, write exactly: "SOURCES_USED:" followed by a
-    comma-separated list of ONLY the [Source: ...] filenames you actually drew on to
-    answer. Cite an attached file WITH its "(attached)" marker
-    (e.g. "report.pdf (attached)"), exactly as shown in its [Source: ...] line.
-    If you used none (e.g. you said the context didn't have the answer),
-    write "SOURCES_USED: none".
-    - Format your answer using simple Markdown: use **bold** for key terms, bullet
-    points for lists, and short paragraphs. Avoid headers (#) — this will be shown
-    in a compact chat window, not a document.
-    - The context may contain excerpts from multiple different documents. If the question
-    spans several documents, use all of them together to give a complete answer, and
-    cite each document you drew from.
-    - If you can answer part of the question but not all of it, answer the part you can
-    and clearly state which part isn't covered by the context.
-
-    Context:
-    {context}
-
-    Question: {question}
-    """
+    return (
+        f"You are a knowledge assistant answering questions using only the company context below.\n"
+        f"\n"
+        f"Rules:\n"
+        f"- Answer only using the provided context.\n"
+        f"- The attached file (if any) is the PRIMARY source: prefer it when the\n"
+        f"  question is about it, and fall back to the company context otherwise.\n"
+        f"- If the answer isn't supported by the context, say so clearly instead of guessing.\n"
+        f"- Do not invent facts, numbers, or policies not present in the context.\n"
+        f'- After your answer, on a new line, write exactly: "SOURCES_USED:" followed by a\n'
+        f"  comma-separated list of ONLY the [Source: ...] filenames you actually drew on to\n"
+        f'  answer. Cite an attached file WITH its "(attached)" marker\n'
+        f'  (e.g. "report.pdf (attached)"), exactly as shown in its [Source: ...] line.\n'
+        f"  If you used none (e.g. you said the context didn't have the answer),\n"
+        f'  write "SOURCES_USED: none".\n'
+        f"- Format your answer using simple Markdown: use **bold** for key terms, bullet\n"
+        f"  points for lists, and short paragraphs. Avoid headers (#) — this will be shown\n"
+        f"  in a compact chat window, not a document.\n"
+        f"- The context may contain excerpts from multiple different documents. If the question\n"
+        f"  spans several documents, use all of them together to give a complete answer, and\n"
+        f"  cite each document you drew from.\n"
+        f"- If you can answer part of the question but not all of it, answer the part you can\n"
+        f"  and clearly state which part isn't covered by the context.\n"
+        f"\n"
+        f"Context:\n"
+        f"{context}\n"
+        f"\n"
+        f"Question: {question}"
+    )
 
 def build_attachment_context(filename: str, text: str, question: str) -> str:
     """Rank an ephemeral upload's text for a question (MVP: nothing stored).
@@ -143,7 +144,7 @@ def generate_answer(question: str, chunks: list[DocumentChunk], attachment: tupl
     contents = [prompt, *image_parts] if image_parts else prompt
 
     response = client.models.generate_content(
-        model="gemini-3.6-flash",
+        model="gemini-3.5-flash",
         contents=contents,
     )
 
