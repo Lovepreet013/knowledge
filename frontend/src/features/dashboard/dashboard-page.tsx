@@ -61,12 +61,21 @@ export default function DashboardPage() {
   // (optimistic question + server answer). The [activeId] loader must skip it,
   // or its fetch resolves mid-flight and wipes the question.
   const skipLoadRef = useRef<number | null>(null);
-  // Navigation-only scroll signals (asking a question never scrolls):
+  // Navigation + send scroll signals:
   // - scrollAfterLoadRef is set only by loadMessages, which runs solely when
-  //   a conversation is opened — sends never touch it.
+  //   a conversation is opened.
+  // - sends scroll explicitly via scrollChatToBottom (question + Thinking).
   // - prevTabRef detects returning to the chat tab with an open conversation.
   const scrollAfterLoadRef = useRef(false);
   const prevTabRef = useRef<string>("chat");
+  // Scroll the window to the absolute bottom (latest question + Thinking /
+  // answer just above the sticky composer). rAF waits for the thread to
+  // paint. Instant (CSS scroll-behavior: auto), matching open-chat scroll.
+  const scrollChatToBottom = () => {
+    requestAnimationFrame(() => {
+      window.scrollTo(0, document.documentElement.scrollHeight);
+    });
+  };
   // Object URLs minted for optimistic image previews. Revoked whenever the
   // messages holding them are discarded (never on append), plus on unmount.
   const previewUrlsRef = useRef<string[]>([]);
@@ -223,6 +232,9 @@ export default function DashboardPage() {
       ...(attachmentPreview ? { attachmentPreview } : {}),
     };
     setMessages((prev) => [...prev, userMessage]);
+    // Move down so the just-asked question + Thinking indicator are visible
+    // just above the sticky composer (rAF waits for the thread to paint).
+    scrollChatToBottom();
     try {
       let res;
       if (file) {
@@ -240,6 +252,8 @@ export default function DashboardPage() {
         sources: res.data.sources ?? [],
       };
       setMessages((prev) => [...prev, assistantMessage]);
+      // Keep the new answer in view after it arrives.
+      scrollChatToBottom();
       // First message in a placeholder-titled chat ("New chat" button flow):
       // rename it to the question, mirroring the direct-input flow where the
       // conversation is created with the question as its title.
@@ -354,12 +368,13 @@ export default function DashboardPage() {
     }
   }, [activeTab]);
 
-  // Chat scrolling is navigation-only: opening a chat (or returning to the
-  // chat tab) pins to the absolute bottom — last AI response + composer.
-  // Asking a question never scrolls; the view stays where the user left it.
+  // Chat scrolling: opening a chat (or returning to the chat tab) pins to
+  // the absolute bottom — last AI response + composer. Asking a question
+  // scrolls explicitly via scrollChatToBottom in postMessage (question +
+  // Thinking, then answer). This effect handles navigation only:
   // loadMessages is the only writer of scrollAfterLoadRef and runs solely on
-  // conversation open, so newly asked messages can't trigger a scroll. rAF
-  // waits for the thread to paint. Instant (CSS scroll-behavior: auto).
+  // conversation open, so sends can't double-trigger here. rAF waits for the
+  // thread to paint. Instant (CSS scroll-behavior: auto).
   useEffect(() => {
     if (activeTab !== "chat") {
       prevTabRef.current = activeTab;

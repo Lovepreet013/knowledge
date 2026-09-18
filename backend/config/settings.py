@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "apps.companies",
     "apps.documents",
     "apps.chat",
+    "django.contrib.postgres"
 ]
 
 MIDDLEWARE = [

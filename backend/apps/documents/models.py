@@ -1,6 +1,7 @@
 from django.db import models
 from apps.companies.models import Company
 from apps.accounts.models import User
+from pgvector.django import VectorField, HnswIndex
 
 
 # Create your models here.
@@ -38,13 +39,20 @@ class DocumentChunk(models.Model):
     )  # denormalized — enables direct filtering without joining through Document
     content = models.TextField()
     chunk_index = models.IntegerField()
-    embedding = models.JSONField(
-        null=True, blank=True
-    )  # filled in the next stage — empty for now
+    embedding = VectorField(dimensions=768, null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["chunk_index"]
+        indexes = [
+            HnswIndex(
+                name="chunk_embedding_hnsw_idx",
+                fields=["embedding"],
+                m=16,
+                ef_construction=64,
+                opclasses=["vector_cosine_ops"]
+            )
+        ]
 
     def __str__(self):
         return f"{self.document.file.name} — chunk {self.chunk_index}"

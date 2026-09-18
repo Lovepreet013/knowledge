@@ -4,6 +4,7 @@ from apps.documents.chunking import chunk_text
 from apps.documents.embeddings import get_embeddings_batch
 from google.genai import types
 from apps.documents.embeddings import get_client
+from pgvector.django import CosineDistance
 
 # Mandatory marker distinguishing user-attached files from company
 # documents in prompts and SOURCES_USED (filenames may collide).
@@ -34,33 +35,18 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
 
-def retrieve_relevant_chunks(
-    question: str, company_id: int, top_k: int = 12
-) -> list[DocumentChunk]:
-    """
-    The core tenant-isolation + retrieval step:
-    1. Only ever looks at chunks belonging to this company.
-    2. Ranks them by similarity to the question.
-    3. Returns the top K.
-    """
-    question_embedding = embed_question(question=question)
+def retrieve_relevant_chunks(question: str, company_id: int, top_k: int = 12) -> list[DocumentChunk]:
+    question_embedding = embed_question(question)
 
-    # tenant isolation happens HERE, before any similarity math runs
-    chunks = DocumentChunk.objects.filter(company_id=company_id).exclude(
-        embedding__isnull=True
+    chunks = (
+        DocumentChunk.objects
+        .filter(company_id=company_id)
+        .exclude(embedding__isnull=True)
+        .select_related("document")
+        .order_by(CosineDistance("embedding", question_embedding))[:top_k]
     )
 
-    if not chunks:
-        return []
-
-    scored = [
-        (chunk, cosine_similarity(question_embedding, chunk.embedding))  # type: ignore
-        for chunk in chunks
-    ]
-
-    scored.sort(key=lambda pair: pair[1], reverse=True)
-
-    return [chunk for chunk, score in scored[:top_k]]
+    return list(chunks)
 
 
 def build_prompt_multi(
