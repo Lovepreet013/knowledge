@@ -270,32 +270,3 @@ export function MarketingCard({
   );
 }
 
-export function StatCard({
-  value,
-  label,
-  footer,
-  tint,
-}: {
-  value: string;
-  label: string;
-  footer?: ReactNode;
-  tint?: string;
-}) {
-  return (
-    <article
-      className="flex min-h-[190px] flex-col rounded-xl border border-[#E0E0E0] bg-white p-6"
-      style={tint ? { background: tint } : undefined}
-    >
-      <p className="font-display text-[32px] leading-[36px] font-medium tracking-[-0.03em] text-black">
-        {value}
-      </p>
-      <p className="mt-2 text-sm leading-5 font-normal text-black">{label}</p>
-      {footer !== undefined && (
-        <div className="mt-auto flex items-center justify-between gap-2 pt-4 text-sm font-normal text-black">
-          {footer}
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </div>
-      )}
-    </article>
-  );
-}

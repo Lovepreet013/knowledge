@@ -2,6 +2,7 @@ import { Navigate } from "react-router";
 import { useEffect, useState } from "react";
 import api, { getAccessToken } from "../lib/api";
 import { LoadingBlock } from "./ui";
+import type { Me } from "./me-provider";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,10 +10,7 @@ interface ProtectedRouteProps {
   requireCompany?: boolean;  // true = user must belong to a company
 }
 
-interface Me {
-  role: string;
-  company: number | null;
-}
+
 
 export default function ProtectedRoute(props: ProtectedRouteProps) {
   const { children, allowedRoles, requireCompany } = props;

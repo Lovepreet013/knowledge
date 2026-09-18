@@ -4,6 +4,8 @@ import { useLocation } from "react-router";
 import api, { getAccessToken } from "../lib/api";
 
 export interface Me {
+  id: number;
+  email: string;
   username: string;
   role: string;
   company: number | null;

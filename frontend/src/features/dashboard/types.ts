@@ -1,11 +1,4 @@
-export interface Me {
-  id: number;
-  email: string;
-  username: string;
-  role: string;
-  company: number | null;
-  company_name?: string | null;
-}
+export type { Me } from "../../components/me-provider";
 
 export interface Conversation {
   id: number;
