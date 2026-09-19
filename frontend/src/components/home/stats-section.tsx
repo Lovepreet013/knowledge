@@ -25,7 +25,7 @@ export default function StatsSection() {
             <p className="mt-4 max-w-sm text-sm leading-5 font-normal text-black">
               Every query is filtered to your company before any similarity
               search runs. Documents, chunks, and conversations never
-              cross tenant boundaries — no tenant ever sees another
+              cross tenant boundaries. No tenant ever sees another
               tenant's data.
             </p>
             <p className="mt-auto flex items-center justify-between gap-2 pt-6 text-sm leading-5 font-normal text-black">

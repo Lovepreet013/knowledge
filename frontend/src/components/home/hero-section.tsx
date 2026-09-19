@@ -97,7 +97,7 @@ export default function HeroSection({ rise }: { rise: (delay: number) => string 
               chat
             </p>
             <p className="font-display mt-1 text-base font-medium text-black">
-              \u201cWhat is our refund policy?\u201d
+              What is our refund policy?
             </p>
           </div>
         </div>
