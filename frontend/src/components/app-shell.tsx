@@ -5,6 +5,8 @@ import { Box, ChevronDown, LogOut, User } from "lucide-react";
 import { useMe } from "./me-provider";
 import { clearAuthTokens } from "../lib/api";
 import { Hairline, StatusBadge } from "./ui";
+import { getAuth0Config } from "../features/auth/auth0-config";
+import { Auth0SignOutMenuItem } from "../features/auth/auth0-button";
 
 export default function AppShell({
   headerLead,
@@ -112,15 +114,24 @@ export default function AppShell({
                     <User className="h-5 w-5 shrink-0" aria-hidden="true" />
                     <span>Profile</span>
                   </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={logout}
-                    className="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-left text-sm leading-5 font-normal text-black transition hover:bg-[#E8E8E8]"
-                  >
-                    <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
-                    <span>Logout</span>
-                  </button>
+                  {getAuth0Config() ? (
+                    <Auth0SignOutMenuItem
+                      onSignedOut={() => {
+                        clearAuthTokens();
+                        closeMenu();
+                      }}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={logout}
+                      className="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-lg px-4 py-3 text-left text-sm leading-5 font-normal text-black transition hover:bg-[#E8E8E8]"
+                    >
+                      <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
+                      <span>Logout</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </>

@@ -5,17 +5,15 @@ import api, { setAuthTokens } from "../../lib/api";
 import { AlertBox, Hairline } from "../../components/ui";
 import { labelCls } from "../../components/ui";
 import AuthLayout from "../../components/auth-layout";
-import { GoogleMark, IconInput, PasswordInput } from "../../components/form-fields";
+import { IconInput, PasswordInput } from "../../components/form-fields";
+import Auth0Button from "./auth0-button";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState<{
-    area: "forgot" | "google";
-    text: string;
-  } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const navigate = useNavigate();
@@ -123,10 +121,9 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() =>
-              setNotice({
-                area: "forgot",
-                text: "Password resets aren't available yet — ask your company admin to help you sign in.",
-              })
+              setNotice(
+                "Password resets aren't available yet — ask your company admin to help you sign in.",
+              )
             }
             className="inline-flex min-h-[44px] shrink-0 cursor-pointer items-center text-sm leading-5 font-normal text-black underline decoration-[#972121] underline-offset-4 transition hover:text-[#972121]"
           >
@@ -134,9 +131,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {notice?.area === "forgot" && (
-          <AlertBox tone="info">{notice.text}</AlertBox>
-        )}
+        {notice && <AlertBox tone="info">{notice}</AlertBox>}
 
         <button
           type="submit"
@@ -159,23 +154,10 @@ export default function LoginPage() {
           <Hairline className="min-w-0 flex-1" />
         </div>
 
-        <button
-          type="button"
-          onClick={() =>
-            setNotice({
-              area: "google",
-              text: "Google sign-in isn't available yet — log in with your username and password.",
-            })
-          }
-          className="inline-flex min-h-[46px] w-full cursor-pointer items-center justify-center gap-3 rounded-lg border border-[#E0E0E0] bg-white px-[22px] py-3 text-base leading-[18.4px] font-normal text-black transition hover:border-[#CCCCCC] hover:bg-[#F5F5F5]"
-        >
-          <GoogleMark />
-          Continue with Google
-        </button>
-
-        {notice?.area === "google" && (
-          <AlertBox tone="info">{notice.text}</AlertBox>
-        )}
+        <Auth0Button
+          remember={remember}
+          onSuccess={() => navigate("/dashboard")}
+        />
 
         <p className="pt-4 text-center text-base leading-[23.2px] font-normal text-black">
           Don&apos;t have an account?{" "}

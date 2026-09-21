@@ -39,6 +39,34 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
+class GoogleAuthSerializer(serializers.Serializer):
+    """ID-token flow: frontend GIS credential + optional invite code.
+
+    `invite_code` is required only for brand-new Google users (to assign
+    their company). Returning users / link-by-email logins ignore it so
+    `company`/`role` are never overwritten on link.
+    """
+
+    id_token = serializers.CharField(required=True, allow_blank=False)
+    invite_code = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True, default=""
+    )
+
+
+class Auth0AuthSerializer(serializers.Serializer):
+    """ID-token flow via Auth0 (e.g. Google connection) + optional invite code.
+
+    Same contract as Google: `invite_code` is required only for brand-new
+    users (login never sends one — a missing code then means "no account
+    for this email, go register").
+    """
+
+    id_token = serializers.CharField(required=True, allow_blank=False)
+    invite_code = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True, default=""
+    )
+
+
 class UserSerializer(serializers.ModelSerializer):
     company_name = serializers.SerializerMethodField()
 

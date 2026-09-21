@@ -84,6 +84,17 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
 }
 
+# Google OAuth (ID-token flow) — Client ID from Google Cloud Console.
+# Frontend sends the GIS ID token; backend verifies it server-side.
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+
+# Auth0 (ID-token flow) — domain like "dev-abc123.us.auth0.com" (no scheme).
+# AUTH0_AUDIENCE is the Auth0 Application's Client ID (the `aud` of its
+# ID tokens). Frontend logs in via Auth0 and sends the ID token; backend
+# verifies its RS256 signature against the tenant JWKS.
+AUTH0_DOMAIN = (os.environ.get("AUTH0_DOMAIN") or "").strip().strip("/").removeprefix("https://").removeprefix("http://")
+AUTH0_AUDIENCE = os.environ.get("AUTH0_AUDIENCE")
+
 ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [

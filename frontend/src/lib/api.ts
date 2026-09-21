@@ -54,7 +54,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-const AUTH_URLS = ["/auth/login/", "/auth/register/", "/auth/login/refresh/"];
+const AUTH_URLS = ["/auth/login/", "/auth/register/", "/auth/token/refresh/", "/auth/google/", "/auth/auth0/"];
 
 // Tracks an in-flight refresh so concurrent 401s don't each trigger their own refresh call.
 let refreshPromise: Promise<string | null> | null = null;
@@ -64,7 +64,7 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!refreshToken) return null;
 
   try {
-    const res = await axios.post(`${api.defaults.baseURL}/auth/login/refresh/`, {
+    const res = await axios.post(`${api.defaults.baseURL}/auth/token/refresh/`, {
       refresh: refreshToken,
     });
     const newAccess = res.data.access;

@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { AtSign, KeyRound, Lock, Mail, User } from "lucide-react";
 import api, { setAuthTokens } from "../../lib/api";
-import { AlertBox, labelCls } from "../../components/ui";
+import { AlertBox, Hairline, labelCls } from "../../components/ui";
 import AuthLayout from "../../components/auth-layout";
 import { IconInput, PasswordInput } from "../../components/form-fields";
+import Auth0Button from "./auth0-button";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
@@ -166,6 +167,41 @@ export default function RegisterPage() {
           {submitting ? "Creating account…" : "Create account"}
         </button>
       </form>
+
+      <div className="mt-8 min-w-0 space-y-4">
+        <div className="flex min-w-0 items-center gap-4" aria-hidden="true">
+          <Hairline className="min-w-0 flex-1" />
+          <span className="font-display shrink-0 text-xs leading-4 font-medium tracking-[0.12em] text-[#666666]">
+            OR
+          </span>
+          <Hairline className="min-w-0 flex-1" />
+        </div>
+
+        <div>
+          <label htmlFor="register-invite-social" className={labelCls}>
+            Invite code
+          </label>
+          <IconInput
+            id="register-invite-social"
+            icon={<KeyRound className="h-5 w-5" />}
+            placeholder="Enter your invite code"
+            autoComplete="off"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
+          />
+          <p className="mt-2 text-sm leading-5 font-normal text-[#666666]">
+            Required to join your company workspace with Google.
+          </p>
+        </div>
+
+        <Auth0Button
+          inviteCode={inviteCode}
+          remember={true}
+          requireInviteCode
+          isSignup
+          onSuccess={() => navigate("/dashboard")}
+        />
+      </div>
 
       <p className="mt-8 text-center text-base leading-[23.2px] font-normal text-black">
         Already have an account?{" "}
