@@ -4,6 +4,18 @@ Ask questions about your company's documents and get cited answers with AI.
 
 Each company has its own isolated workspace. Users chat with their company's documents only. Admins upload documents, manage users. Superadmins manage companies.
 
+![Homepage](images/Homepage.png)
+
+## Screenshots
+
+| Homepage | Login | Register |
+|----------|-------|----------|
+| ![Homepage](images/Homepage.png) | ![Login](images/Login.png) | ![Register](images/Register.png) |
+
+| Dashboard | Asking | Answer |
+|-----------|--------|--------|
+| ![Dashboard](images/Dashboard.png) | ![Asking question](images/Asking%20question.png) | ![Response](images/Response.png) |
+
 ## Features
 
 - **Multi-tenant workspaces** — companies isolated by invite code
@@ -136,12 +148,42 @@ Frontend runs at `http://localhost:5173`.
 
 ## How to Use
 
+### 1. Landing, login and register
+
+Landing page explains the product.
+
+![Homepage](images/Homepage.png)
+
+Login with username/password or Continue with Google.
+
+![Login](images/Login.png)
+
+New members join with an invite code from their company.
+
+![Register](images/Register.png)
+
+### 2. Create company and invite users
+
 1. Login as superadmin at `/login` (the `createsuperuser` account).
 2. Go to Dashboard → **Companies** tab → Create company → copy its **invite code**.
 3. Go to **Promote** tab to promote a user to `company_admin`.
 4. Register new users at `/register` with the invite code.
-5. As `company_admin`: **Documents** tab → upload PDF/TXT → wait for status `ready`.
-6. Chat in the **Chat** tab. Answers cite `[company doc]` or `(attached)` sources.
+
+### 3. Upload documents and chat
+
+Empty dashboard — ask a question or upload first.
+
+![Dashboard](images/Dashboard.png)
+
+As `company_admin`: **Documents** tab → upload PDF/TXT → wait for status `ready`.
+
+Ask in the **Chat** tab.
+
+![Asking question](images/Asking%20question.png)
+
+Answers stream in with citations from your company docs only.
+
+![Response](images/Response.png)
 
 ## User Roles
 
