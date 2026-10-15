@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router";
 import { Box, Menu, X } from "lucide-react";
 import AppShell from "../../components/app-shell";
 import { AlertBox, LoadingBlock } from "../../components/ui";
-import api from "../../lib/api";
+import api, { getAccessToken } from "../../lib/api";
 import { firstApiError } from "../../lib/utils";
 import UsersTab from "./tabs/users-tab";
 import DocumentsTab from "./tabs/documents-tab";
@@ -213,6 +213,7 @@ export default function DashboardPage() {
     if (trimmed === "" || sending) return;
     setError("");
     setSending(true);
+
     let attachmentPreview: Message["attachmentPreview"];
     if (file) {
       if (/\.(png|jpe?g)$/i.test(file.name)) {
@@ -223,6 +224,7 @@ export default function DashboardPage() {
         attachmentPreview = { name: file.name, kind: "file" };
       }
     }
+
     const userMessage: Message = {
       id: Date.now(),
       role: "user",
@@ -231,32 +233,84 @@ export default function DashboardPage() {
       created_at: new Date().toISOString(),
       ...(attachmentPreview ? { attachmentPreview } : {}),
     };
-    setMessages((prev) => [...prev, userMessage]);
-    // Move down so the just-asked question + Thinking indicator are visible
-    // just above the sticky composer (rAF waits for the thread to paint).
+
+    // Placeholder assistant message — starts empty, fills in as tokens stream.
+    const assistantId = Date.now() + 1;
+    const assistantMessage: Message = {
+      id: assistantId,
+      role: "assistant",
+      content: "",
+      sources: [],
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, userMessage, assistantMessage]);
     scrollChatToBottom();
+
     try {
-      let res;
+      const token = getAccessToken();
+      const baseURL = api.defaults.baseURL ?? "";
+      const url = `${baseURL}/conversations/${conversationId}/messages/stream/`;
+
+      let response: Response;
       if (file) {
         const formData = new FormData();
         formData.append("content", trimmed);
         formData.append("file", file);
-        res = await api.post(`/conversations/${conversationId}/messages/`, formData);
+        response = await fetch(url, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
       } else {
-        res = await api.post(`/conversations/${conversationId}/messages/`, {
-          content: trimmed,
+        response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ content: trimmed }),
         });
       }
-      const assistantMessage: Message = {
-        ...res.data,
-        sources: res.data.sources ?? [],
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      // Keep the new answer in view after it arrives.
+
+      if (!response.ok || !response.body) {
+        throw new Error("Stream request failed");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop() || ""; // keep any incomplete trailing event for next read
+
+        for (const rawEvent of events) {
+          if (!rawEvent.startsWith("data: ")) continue;
+          const data = JSON.parse(rawEvent.slice(6));
+
+          if (data.token) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId ? { ...m, content: m.content + data.token } : m,
+              ),
+            );
+          } else if (data.done) {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === assistantId ? { ...m, sources: data.sources ?? [] } : m,
+              ),
+            );
+          }
+        }
+      }
+
       scrollChatToBottom();
-      // First message in a placeholder-titled chat ("New chat" button flow):
-      // rename it to the question, mirroring the direct-input flow where the
-      // conversation is created with the question as its title.
+
       const current = conversations.find((c) => c.id === conversationId);
       if (current && (current.title === "New chat" || current.title.trim() === "")) {
         const newTitle = trimmed.slice(0, 60);
@@ -271,6 +325,8 @@ export default function DashboardPage() {
       }
     } catch (err: unknown) {
       setError(firstApiError(err, "Failed to get a response. Please try again."));
+      // Drop the empty placeholder if streaming never produced any content.
+      setMessages((prev) => prev.filter((m) => !(m.id === assistantId && m.content === "")));
     } finally {
       setSending(false);
     }

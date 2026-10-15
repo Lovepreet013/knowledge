@@ -1,5 +1,6 @@
+import json
+from django.http import StreamingHttpResponse
 from rest_framework import generics, permissions
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from .models import Conversation, Message
@@ -15,12 +16,9 @@ from .rag import (
     build_attachment_context,
     retrieve_relevant_chunks,
     generate_answer,
+    generate_answer_stream,
 )
-from .attachments import (
-    build_thumbnail_file,
-    load_stored_image_for_gemini,
-    process_upload,
-)
+from .attachments import build_thumbnail_file, load_stored_image_for_gemini, process_upload
 
 
 # Create your views here.
@@ -94,46 +92,38 @@ class MessageListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, conversation_id):
-        conversation = self._get_conversation(request, conversation_id)  # type: ignore
-        messages = conversation.messages.all()  # type: ignore
+        conversation = self._get_conversation(request, conversation_id)
+        messages = conversation.messages.all()
         return Response(MessageSerializer(messages, many=True).data)
 
-    def post(self, request, conversation_id):
-        conversation = self._get_conversation(request, conversation_id)
-
+    def _build_context(self, request, conversation):
+        """
+        Shared setup used by both the synchronous and streaming message
+        endpoints: saves the user's message (+ attachment/thumbnail if any),
+        gathers history attachments per the reuse rules, and resolves the
+        chunks/attachments/images to hand to Gemini.
+        """
         serializer = SendMessageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         question = serializer.validated_data["content"]
         upload = serializer.validated_data.get("file")
 
-        # Persistent attachment: validated in RAM, then stored on the user
-        # Message (`attachment` + little `attachment_thumbnail` for images)
-        # so the bubble keeps its thumbnail/file pill on reload. The stored
-        # text/image is also reused for follow-up questions below.
-        current_name: str | None = None
+        current_name = None
         current_ranked_text = ""
-        current_image: tuple[bytes, str] | None = None
-        user_message = Message(
-            conversation=conversation, role="user", content=question
-        )
+        current_image = None
+        user_message = Message(conversation=conversation, role="user", content=question)
+
         if upload is not None:
-            current_name, kind, extracted, image_bytes, mime = process_upload(
-                upload
-            )
+            current_name, kind, extracted, image_bytes, mime = process_upload(upload)
             user_message.attachment_name = current_name
             user_message.attachment_kind = kind
             if kind in ("pdf", "txt"):
-                # Keep the full extraction for future questions; rank a
-                # snippet for this question's prompt.
                 user_message.attachment_text = extracted
-                current_ranked_text = build_attachment_context(
-                    current_name, extracted, question
-                )
+                current_ranked_text = build_attachment_context(current_name, extracted, question)
             else:
                 user_message.attachment_text = ""
                 current_ranked_text = ""
-                current_image = (image_bytes, mime or "image/jpeg")  # type: ignore
-            # Save first so FileFields have an instance, then store files.
+                current_image = (image_bytes, mime or "image/jpeg")
             user_message.save()
             try:
                 upload.seek(0)
@@ -142,37 +132,20 @@ class MessageListCreateView(generics.ListCreateAPIView):
             user_message.attachment.save(current_name, upload, save=True)
             if current_image is not None:
                 try:
-                    thumb_file = build_thumbnail_file(
-                        current_name, current_image[0]
-                    )
-                    user_message.attachment_thumbnail.save(
-                        thumb_file.name, thumb_file, save=True
-                    )
+                    thumb_file = build_thumbnail_file(current_name, current_image[0])
+                    user_message.attachment_thumbnail.save(thumb_file.name, thumb_file, save=True)
                 except Exception:
-                    # Thumbnail is display-only: keep the original file and
-                    # continue rather than failing the question.
                     pass
         else:
             user_message.save()
 
-        # Follow-up reuse: prior attachments stay in context ONLY when
-        # needed. Pure follow-ups (no new upload) reuse history as before.
-        # With a new upload, default to CURRENT-only so "Explain the image"
-        # explains the just-uploaded file; include history only when the
-        # question explicitly refers to previous/earlier/compare/both/all.
-        # Tenant isolation holds because the queryset is scoped to this
-        # conversation (already scoped to user + company).
         history_attachments: list[tuple[str, str]] = []
         history_images: list[tuple[bytes, str]] = []
-        include_history = (current_name is None) or _question_refers_to_history(
-            question
-        )
+        include_history = (current_name is None) or _question_refers_to_history(question)
         if include_history:
             try:
                 prior = list(
-                    Message.objects.filter(
-                        conversation=conversation, role="user"
-                    )
+                    Message.objects.filter(conversation=conversation, role="user")
                     .exclude(id=user_message.id)
                     .exclude(attachment__isnull=True)
                     .exclude(attachment="")
@@ -180,7 +153,7 @@ class MessageListCreateView(generics.ListCreateAPIView):
                 )
             except Exception:
                 prior = []
-            prior.reverse()  # chronological: history first, current last
+            prior.reverse()
             text_count = 0
             image_count = 0
             for msg in prior:
@@ -192,11 +165,7 @@ class MessageListCreateView(generics.ListCreateAPIView):
                     if image_count >= MAX_HISTORY_IMAGES:
                         continue
                     try:
-                        loaded = (
-                            load_stored_image_for_gemini(msg.attachment)
-                            if msg.attachment
-                            else None
-                        )
+                        loaded = load_stored_image_for_gemini(msg.attachment) if msg.attachment else None
                     except Exception:
                         loaded = None
                     if loaded is None:
@@ -218,65 +187,106 @@ class MessageListCreateView(generics.ListCreateAPIView):
                         continue
                     history_attachments.append((name, ranked))
                     text_count += 1
-                # unknown kinds are ignored (forward-compatible)
 
-        current_attachments: list[tuple[str, str]] = (
-            [(current_name, current_ranked_text)] if current_name else []
-        )
-        current_images: list[tuple[bytes, str]] = (
-            [current_image] if current_image is not None else []
-        )
+        current_attachments = [(current_name, current_ranked_text)] if current_name else []
+        current_images = [current_image] if current_image is not None else []
         all_attachments = history_attachments + current_attachments
         all_images = history_images + current_images
         current_names = {current_name} if current_name else None
 
         chunks = retrieve_relevant_chunks(question, conversation.company_id)
-        answer_text, used_filenames = generate_answer(
-            question,
-            chunks,
-            attachments=all_attachments or None,
-            images=all_images or None,
-            current_names=current_names,
-        )
 
-        # only include chunks whose document filename was actually cited by the model
+        return {
+            "question": question,
+            "chunks": chunks,
+            "attachments": all_attachments,
+            "images": all_images,
+            "current_names": current_names,
+        }
+
+    def _build_sources(self, chunks, all_attachments, used_filenames):
         sources = []
         seen_documents = set()
         for chunk in chunks:
             filename = chunk.document.file.name
             if filename in used_filenames and chunk.document_id not in seen_documents:
                 seen_documents.add(chunk.document_id)
-                sources.append({
-                    "document_id": chunk.document_id,
-                    "document_name": filename,
-                    "origin": "company",
-                })
-        seen_attachment_names: set[str] = set()
+                sources.append({"document_id": chunk.document_id, "document_name": filename, "origin": "company"})
+        seen_attachment_names = set()
         for name, _text in all_attachments:
             if not name or name in seen_attachment_names:
                 continue
             seen_attachment_names.add(name)
             if f"{name}{ATTACHMENT_SUFFIX}" in used_filenames:
-                sources.append({
-                    "document_id": None,
-                    "document_name": name,
-                    "origin": "attachment",
-                })
+                sources.append({"document_id": None, "document_name": name, "origin": "attachment"})
+        return sources
+
+    def post(self, request, conversation_id):
+        conversation = self._get_conversation(request, conversation_id)
+        ctx = self._build_context(request, conversation)
+
+        answer_text, used_filenames = generate_answer(
+            ctx["question"], ctx["chunks"],
+            attachments=ctx["attachments"] or None,
+            images=ctx["images"] or None,
+            current_names=ctx["current_names"],
+        )
+
+        sources = self._build_sources(ctx["chunks"], ctx["attachments"], used_filenames)
 
         assistant_message = Message.objects.create(
             conversation=conversation, role="assistant", content=answer_text, sources=sources
         )
-
         return Response(MessageSerializer(assistant_message).data, status=201)
 
     def _get_conversation(self, request, conversation_id):
         try:
-            # tenant + ownership isolation together — a conversation belongs to
-            # a specific company AND a specific user
             return Conversation.objects.get(
                 id=conversation_id, user=request.user, company=request.user.company
             )
         except Conversation.DoesNotExist:
             from rest_framework.exceptions import NotFound
-
             raise NotFound("Conversation not found.")
+
+
+class MessageStreamView(MessageListCreateView):
+    """
+    Same behavior/contract as MessageListCreateView.post — attachment
+    handling, history reuse, tenant isolation — all inherited via
+    _build_context/_build_sources. Only the generation step differs:
+    tokens are streamed to the client via SSE instead of returned as one
+    JSON response once Gemini finishes.
+    """
+
+    def post(self, request, conversation_id):
+        conversation = self._get_conversation(request, conversation_id)
+        ctx = self._build_context(request, conversation)
+
+        def event_stream():
+            final_answer = ""
+            final_filenames = []
+
+            for event in generate_answer_stream(
+                ctx["question"], ctx["chunks"],
+                attachments=ctx["attachments"] or None,
+                images=ctx["images"] or None,
+                current_names=ctx["current_names"],
+            ):
+                if event.get("done"):
+                    final_answer = event["answer_text"]
+                    final_filenames = event["used_filenames"]
+                    break
+                yield f"data: {json.dumps({'token': event['token']})}\n\n"
+
+            sources = self._build_sources(ctx["chunks"], ctx["attachments"], final_filenames)
+
+            Message.objects.create(
+                conversation=conversation, role="assistant", content=final_answer, sources=sources
+            )
+
+            yield f"data: {json.dumps({'done': True, 'sources': sources})}\n\n"
+
+        response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"
+        return response

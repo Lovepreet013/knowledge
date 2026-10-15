@@ -28,10 +28,14 @@ export default function ChatThread({
       window.scrollTo(0, document.documentElement.scrollHeight);
     }
   };
+
   return (
     <div className="space-y-3" aria-live="polite">
-      {messages.map((m) => {
+      {messages.map((m, index) => {
         const isUser = m.role === "user";
+        const isLastMessage = index === messages.length - 1;
+        const isStreamingThisMessage =
+          sending && isLastMessage && m.role === "assistant" && m.content !== "";
         const imagePreview =
           m.attachmentPreview?.kind === "image" ? m.attachmentPreview : undefined;
         const filePreview =
@@ -64,9 +68,9 @@ export default function ChatThread({
           : (filePreview?.name ?? "");
         const fullSizeHref =
           isPersistedImage &&
-          persistedThumb &&
-          persistedOriginal &&
-          persistedThumb !== persistedOriginal
+            persistedThumb &&
+            persistedOriginal &&
+            persistedThumb !== persistedOriginal
             ? persistedOriginal
             : null;
         return (
@@ -108,6 +112,11 @@ export default function ChatThread({
               >
                 <div className="[&>p+p]:mt-3 [&>ul]:mt-2 [&>ol]:mt-2">
                   <ReactMarkdown>{m.content}</ReactMarkdown>
+                  {isStreamingThisMessage && (
+                    <span className="blinking-cursor" aria-hidden="true">
+                      ▋
+                    </span>
+                  )}
                 </div>
                 {(fileHref || filePreview) && (
                   <p className="mt-2 flex">
@@ -117,18 +126,16 @@ export default function ChatThread({
                         target="_blank"
                         rel="noreferrer"
                         title={`${fileName} — open attached file`}
-                        className={`font-display inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-xs leading-4 font-medium ${
-                          isUser ? "bg-white/15 text-white" : "bg-[#F5F5F5] text-black"
-                        }`}
+                        className={`font-display inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-xs leading-4 font-medium ${isUser ? "bg-white/15 text-white" : "bg-[#F5F5F5] text-black"
+                          }`}
                       >
                         <Paperclip className="h-3 w-3 shrink-0" aria-hidden="true" />
                         <span className="truncate">{fileName}</span>
                       </a>
                     ) : (
                       <span
-                        className={`font-display inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-xs leading-4 font-medium ${
-                          isUser ? "bg-white/15 text-white" : "bg-[#F5F5F5] text-black"
-                        }`}
+                        className={`font-display inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1 text-xs leading-4 font-medium ${isUser ? "bg-white/15 text-white" : "bg-[#F5F5F5] text-black"
+                          }`}
                       >
                         <Paperclip className="h-3 w-3 shrink-0" aria-hidden="true" />
                         <span className="truncate">{fileName}</span>
@@ -142,9 +149,8 @@ export default function ChatThread({
                       <span
                         key={s.document_id ?? `${s.document_name}-${i}`}
                         title={s.origin === "attachment" ? "Attached file" : undefined}
-                        className={`font-display inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs leading-4 font-medium text-black ${
-                          s.origin === "attachment" ? "bg-[#E8DFF7]" : "bg-[#DDEAF6]"
-                        }`}
+                        className={`font-display inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs leading-4 font-medium text-black ${s.origin === "attachment" ? "bg-[#E8DFF7]" : "bg-[#DDEAF6]"
+                          }`}
                       >
                         <Paperclip className="h-3 w-3 shrink-0" aria-hidden="true" />
                         {s.document_name.split("/").pop()}
@@ -157,11 +163,13 @@ export default function ChatThread({
           </div>
         );
       })}
-      {sending && (
-        <div className="inline-block rounded-xl rounded-bl-sm bg-white px-4 py-3">
-          <ThinkingIndicator label="Thinking" />
-        </div>
-      )}
+      {sending &&
+        messages[messages.length - 1]?.role === "assistant" &&
+        messages[messages.length - 1]?.content === "" && (
+          <div className="inline-block rounded-xl rounded-bl-sm bg-white px-4 py-3">
+            <ThinkingIndicator label="Thinking" />
+          </div>
+        )}
       <div ref={bottomRef} />
     </div>
   );

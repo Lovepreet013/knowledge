@@ -227,3 +227,72 @@ def generate_answer(
         used_filenames = []
 
     return answer_text.strip(), used_filenames
+
+
+def generate_answer_stream(
+    question: str,
+    chunks: list[DocumentChunk],
+    attachments: list[tuple[str, str]] | None = None,
+    images: list[tuple[bytes, str]] | None = None,
+    current_names: set[str] | None = None,
+):
+    """
+    Streaming counterpart to generate_answer. Yields:
+      {"token": "..."}  — visible text as it streams in
+      {"done": True, "answer_text": "...", "used_filenames": [...]}
+    Withholds the SOURCES_USED marker from the visible stream, mirroring
+    generate_answer's post-hoc parsing but done incrementally.
+    """
+    has_attachment_text = any((t or "").strip() for _, t in (attachments or []))
+    has_images = bool(images)
+
+    if not chunks and not has_attachment_text and not has_images:
+        message = "I couldn't find this information in the available company documents."
+        yield {"token": message}
+        yield {"done": True, "answer_text": message, "used_filenames": []}
+        return
+
+    prompt = build_prompt_multi(question, chunks, attachments=attachments, current_names=current_names)
+    client = get_client()
+
+    image_parts = [
+        types.Part.from_bytes(data=data, mime_type=mime)
+        for data, mime in (images or [])
+    ]
+    contents = [prompt, *image_parts] if image_parts else prompt
+
+    stream = client.models.generate_content_stream(model="gemini-3.6-flash", contents=contents)
+
+    marker = "SOURCES_USED:"
+    full_buffer = ""
+    yielded_length = 0
+
+    for chunk in stream:
+        full_buffer += chunk.text or ""
+        marker_index = full_buffer.find(marker)
+
+        if marker_index != -1:
+            if marker_index > yielded_length:
+                yield {"token": full_buffer[yielded_length:marker_index]}
+                yielded_length = marker_index
+            break
+
+        # marker may straddle a chunk boundary — hold back a safety margin
+        safe_length = max(0, len(full_buffer) - len(marker))
+        if safe_length > yielded_length:
+            yield {"token": full_buffer[yielded_length:safe_length]}
+            yielded_length = safe_length
+
+    if marker in full_buffer:
+        answer_text, sources_line = full_buffer.split(marker, 1)
+        used_filenames = [
+            name.strip() for name in sources_line.split(",")
+            if name.strip() and name.strip().lower() != "none"
+        ]
+    else:
+        if len(full_buffer) > yielded_length:
+            yield {"token": full_buffer[yielded_length:]}
+        answer_text = full_buffer
+        used_filenames = []
+
+    yield {"done": True, "answer_text": answer_text.strip(), "used_filenames": used_filenames}

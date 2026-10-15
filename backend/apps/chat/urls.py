@@ -3,6 +3,7 @@ from .views import (
     ConversationDetailView,
     ConversationListCreateView,
     MessageListCreateView,
+    MessageStreamView
 )
 
 urlpatterns = [
@@ -17,4 +18,5 @@ urlpatterns = [
         MessageListCreateView.as_view(),
         name="message-list-create",
     ),
+    path("<int:conversation_id>/messages/stream/", MessageStreamView.as_view()),
 ]
